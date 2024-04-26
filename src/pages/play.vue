@@ -257,6 +257,7 @@ const tabClick = async (index: number) => {
       <div ref="player" rounded-2 text-4 text-white @contextmenu.prevent="" @mousemove="autoHide"
         :class="{ 'cursor-none': !(state.showController), 'text-5': state.fullscreen, 'text-5 !pos-fixed left-0 right-0 top-0 bottom-0 z-10 ': state.webscreen }"
         pos-relative h-full w-full overflow-hidden select-none line-height-none bg-black>
+
         <video playsinline webkit-playsinline x5-video-player-type="h5" autoplay ref="video" w-full h-full pos-absolute
           @click="play" @dblclick="fullscreen" @play="playEvent" @pause="pauseEvent"></video>
         <div w-full h-full pos-absolute flex justify-center items-center text-6 v-show="state.notice">
@@ -318,13 +319,12 @@ const tabClick = async (index: number) => {
         </Tab>
       </Tabs>
       <!-- <div grid grid-cols-3 text-center gap-2> -->
-      <div flex justify-around>
+      <!-- <div flex justify-around>
         <div cursor-pointer hover:text-amber p-2 rounded-2 @click="follow">
           <div :class="state.follow ? 'i-ri-heart-fill' : 'i-ri-heart-line'"></div>
           <span ml-1>关注</span>
         </div>
-        <div @click="init" cursor-pointer hover:text-amber p-2 rounded-2>
-          <!-- <div class="i-mdi-sync" style="transform:rotate(-45deg)"></div> -->
+        <div @click="init" cursor-pointer hover:text-amber p-2 rounded-2> 
           <div class="i-ri-refresh-line"></div>
           <span ml-1>刷新</span>
         </div>
@@ -332,7 +332,7 @@ const tabClick = async (index: number) => {
           <div class="i-ri-share-line"></div>
           <span ml-1>分享</span>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>

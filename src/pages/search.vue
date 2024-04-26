@@ -25,7 +25,6 @@ const search = () => {
 
 const load: onLoad = (setStatus) => {
   const search = site.value.search
-  setStatus('loading')
   useSiteFetch(site.value.id, 'searchRooms', { page: search.page, kw: kw.value }).then(data => {
     search.list.value = search.list.value.concat(data.list)
     search.hasMore = data.hasMore
@@ -35,8 +34,8 @@ const load: onLoad = (setStatus) => {
   }, msg => { console.log(msg); setStatus('loaderror') })
 }
 
-const refresh: onRefresh = async (reset) => {
-  search().finally(reset)
+const refresh: onRefresh = async (ok) => {
+  search().finally(ok)
 }
 
 const tabClick = (index: number) => {
@@ -46,7 +45,7 @@ const tabClick = (index: number) => {
 const router = useRouter()
 
 const goRoom = () => {
-  if (/[\d]/.test(kw.value)) {
+  if (/^[\d]*$/.test(kw.value)) {
     router.push(`/play/${site.value.id}/${kw.value}`)
     return true
   }
@@ -69,7 +68,7 @@ const goSearch = () => {
       </div>
     </div>
   </div>
-  <div class="h-[calc(100%-3rem)]">
+  <div class="h-[calc(100%-3.25rem)]">
     <Tabs v-model:active="active" @tabClick="tabClick">
       <Tab v-for="site in sites" :title="site.name" :key="site.id">
         <template v-if="status == 'finished'">

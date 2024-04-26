@@ -1,11 +1,8 @@
 
-export type status = 'normal'| 'loading' | 'finshed' | 'loaderror' |'refreshing'|  'pulling' 
+export type status = 'normal' | 'loading' | 'finshed' | 'loaderror'
 
-export type loadStatus =  Exclude<status,'refreshing'|  'pulling' >
+export type onLoad = (setStatus: (status: status) => void) => void
 
-export type onLoad = (setStatus: (val: loadStatus) => void) => void
-
-export type onRefresh = (reset: () => void) => void
-
+export type { onRefresh } from '../refresh/refresh'
 
 

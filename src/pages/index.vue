@@ -6,7 +6,6 @@ const active = ref(0)
 
 const load: onLoad = (setStatus) => {
   const recommend = sites[active.value].recommend
-  setStatus('loading')
   useSiteFetch(sites[active.value].id, 'getRecommendRooms', { page: recommend.page }).then(data => {
     recommend.list.value = recommend.list.value.concat(data.list)
     recommend.hasMore = data.hasMore 
@@ -18,13 +17,14 @@ const load: onLoad = (setStatus) => {
 }
 
 
-const refresh: onRefresh = (reset) => {
+const refresh: onRefresh = (ok) => {
   const recommend = sites[active.value].recommend
-  useSiteFetch(sites[active.value].id, 'getRecommendRooms', { page: recommend.page }).then(data => {
+  useSiteFetch(sites[active.value].id, 'getRecommendRooms').then(data => {
+    console.log(data)
     recommend.list.value = data.list
     recommend.hasMore = data.hasMore
     recommend.page=1
-  }).finally(reset)
+  }).finally(ok)
 }
 
 </script>

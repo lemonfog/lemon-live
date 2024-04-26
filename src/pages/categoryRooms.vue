@@ -27,8 +27,7 @@ const state: page = {
 } 
 
 const load: onLoad = (setStatus) => {
-  const { site, id } = route.meta
-  setStatus('loading') 
+  const { site, id } = route.meta 
   useSiteFetch(site.id, 'getCategoryRooms', { id, pid: pid.value, page: state.page }).then(data => {
     state.list.value = state.list.value.concat(data.list)
     state.hasMore = data.hasMore
@@ -42,17 +41,15 @@ const load: onLoad = (setStatus) => {
   })
 }
 
-const refresh: onRefresh = (reset) => {
+const refresh: onRefresh = (ok) => {
   const { site, id } = route.meta 
-  useSiteFetch(site.id, 'getCategoryRooms', { id, page: state.page }).then(data => {
+  useSiteFetch(site.id, 'getCategoryRooms', { id }).then(data => {
     state.list.value = data.list
     state.hasMore = data.hasMore
-    state.page++
-    reset()
+    state.page++ 
   }, msg => {
-    name.value = msg
-    reset()
-  })
+    name.value = msg 
+  }).finally(ok)
 }
 let fullPath = route.fullPath
 
@@ -80,9 +77,9 @@ onActivated(function () {
   <div h-full>
     <div flex p-2 text-lg>
       <div hover:text-amber @click="$router.back" class="i-mdi-arrow-left"></div>
-      <div hover:text-amber grow text-center>{{ name == null ? '分区不存在' : name }}</div>
+      <div hover:text-amber grow text-center>{{ name == null ? '分区不存在' : name==''?'加载中':name }}</div>
     </div>
-    <div v-if="name" class="h-[calc(100%-3.25rem)]">
+    <div v-if="name" class="h-[calc(100%-3.25rem)] scrolly">
       <List :key="fullPath" @load="load" @refresh="refresh">
         <Rooms :site-id="$route.meta.site?.id" :list="state.list"></Rooms>
       </List>

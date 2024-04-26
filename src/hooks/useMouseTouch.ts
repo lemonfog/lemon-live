@@ -16,7 +16,7 @@ export const useMouseTouch = (target: Ref<HTMLElement | undefined>) => {
   const listeners = {} as Record<type, EventListener>
   const events = {} as Record<type, Touch | MouseEvent>
 
-  const addHook = () => types.forEach(type => target.value?.addEventListener(mouseEvents[type], listeners[type], { capture: true }))
+  const addHook = () => types.forEach(type => target.value?.addEventListener(mouseEvents[type], listeners[type]))
 
   const removeHook = () => types.forEach(type => target.value?.removeEventListener(mouseEvents[type], listeners[type]))
   onMounted(addHook)
@@ -24,12 +24,12 @@ export const useMouseTouch = (target: Ref<HTMLElement | undefined>) => {
   onDeactivated(removeHook)
   onUnmounted(removeHook)
 
-  const setEvent = (type: type, listener: ()=>void) =>
+  const setEvent = (type: type, listener: (e:Event)=>void) =>
     listeners[type] = (ev: Event) => {
       const e = getMouseTouchEvent(ev)
       // if (e == undefined) console.log(type, ev)
       events[type] = e
-      listener()
+      listener(ev)
     }
 
   return { events, setEvent }
