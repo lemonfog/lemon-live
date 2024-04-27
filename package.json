@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prod":"vite build && cd f:/deno/lemonlive && deployctl deploy --prod && cd f:/vue/lemonlive"
   },
   "dependencies": {
     "lemon-mse": "^0.1.7",

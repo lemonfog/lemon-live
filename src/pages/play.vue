@@ -69,12 +69,11 @@ const url = computed(() => lines.value.length > 0 ? room.value!.stream[state.typ
 const follows = computed(() => sites.map(site => Object.values(site.follows) as LiveRoomItem[]).flat().sort(i => i.status ? -1 : 0))
 
 watch(url, () => {
-  if (!url.value) return
-  state.notice = null
+  if (!url.value) return 
   const type = types.value[state.type!].toLowerCase() as 'flv' | 'hls'
   if (state[type]) {
     type == 'flv' ? state.flv?.switchURL(url.value, true) : state.hls?.loadSource(url.value)
-    return
+    return 
   }
   if (type == 'flv' && Flv?.isSupported('video')) {
     const flv = new Flv({ media: video.value, seamlesslyReload: true,isLive:true, retryCount: 0})
@@ -112,7 +111,7 @@ const init = () => {
   state.notice = '加载中...'
   useSiteFetch(site.id, 'getRoomDetail', { id }).then((data) => {
     room.value = data
-    state.notice = data.status ? null : '未开播！'
+    if(!data.status) return state.notice = '未开播！'  
   }, (msg) => {
     state.notice = msg
   }).finally(() => clearTimeout(noticeTimer))
@@ -167,18 +166,14 @@ const pauseEvent = () => {
 }
 
 const volumeUp = () => {
-  clearTimeout(noticeTimer)
-  // const volume = Math.min(1, parseFloat((state.volume + 0.05).toFixed(2)))
-  // state.volume = volume
+  clearTimeout(noticeTimer) 
   setVolume(true)
   video.value.volume = volume.value
   state.notice = `当前音量 ${video.value.volume}`
   noticeTimer = setTimeout(() => state.notice = null, 1000)
 }
 const volumeDown = () => {
-  clearTimeout(noticeTimer)
-  // const volume = Math.max(0, parseFloat((state.volume - 0.05).toFixed(2)))
-  // state.volume = volume
+  clearTimeout(noticeTimer) 
   setVolume(false)
   video.value.volume = volume.value
   state.notice = `当前音量 ${video.value.volume}`
@@ -211,6 +206,7 @@ const remove = () => {
 init()
 onMounted(() => {
   video.value.volume = volume.value
+  video.value.addEventListener('canplay',()=>{state.notice=null})
   document.addEventListener('keydown', hotkey)
 })
 onBeforeRouteUpdate((to) => {
