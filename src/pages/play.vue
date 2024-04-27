@@ -72,7 +72,7 @@ watch(url, () => {
   if (!url.value) return 
   const type = types.value[state.type!].toLowerCase() as 'flv' | 'hls'
   if (state[type]) {
-    type == 'flv' ? state.flv?.switchURL(url.value, true) : state.hls?.loadSource(url.value)
+    type == 'flv' ? state.flv?.switchURL(url.value,route.meta.site.id!='bilibili'  ) : state.hls?.loadSource(url.value)
     return 
   }
   if (type == 'flv' && Flv?.isSupported('video')) {
