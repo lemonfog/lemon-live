@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { sites, addFollow, removeFollow ,volume,setVolume} from '../store'
+import { sites, addFollow, removeFollow, volume, setVolume } from '../store'
 import { Flv, Hls } from 'lemon-mse';
 
 // definePage({
@@ -69,15 +69,15 @@ const url = computed(() => lines.value.length > 0 ? room.value!.stream[state.typ
 const follows = computed(() => sites.map(site => Object.values(site.follows) as LiveRoomItem[]).flat().sort(i => i.status ? -1 : 0))
 
 watch(url, () => {
-  if (!url.value) return 
+  if (!url.value) return
   const type = types.value[state.type!].toLowerCase() as 'flv' | 'hls'
   if (state[type]) {
-    type == 'flv' ? state.flv?.switchURL(url.value,route.meta.site.id!='bilibili'  ) : state.hls?.loadSource(url.value)
-    return 
+    type == 'flv' ? state.flv?.switchURL(url.value, route.meta.site.id != 'bilibili') : state.hls?.loadSource(url.value)
+    return
   }
   if (type == 'flv' && Flv?.isSupported('video')) {
-    const flv = new Flv({ media: video.value, seamlesslyReload: true,isLive:true, retryCount: 0})
-    flv.load(url.value) 
+    const flv = new Flv({ media: video.value, seamlesslyReload: true, isLive: true, retryCount: 0 })
+    flv.load(url.value)
     return state.flv = flv
   }
   if (type == 'hls' && Hls?.isSupported()) {
@@ -111,7 +111,7 @@ const init = () => {
   state.notice = '加载中...'
   useSiteFetch(site.id, 'getRoomDetail', { id }).then((data) => {
     room.value = data
-    if(!data.status) return state.notice = '未开播！'  
+    if (!data.status) return state.notice = '未开播！'
   }, (msg) => {
     state.notice = msg
   }).finally(() => clearTimeout(noticeTimer))
@@ -138,8 +138,8 @@ const fullscreen = () => {
 
 }
 const autoHide = () => {
-  state.showController = true
   clearTimeout(autoHideTimer)
+  state.showController = true
   autoHideTimer = setTimeout(() => {
     if (video.value?.paused || !(video.value?.played.length)) return
     state.showController = false
@@ -166,14 +166,14 @@ const pauseEvent = () => {
 }
 
 const volumeUp = () => {
-  clearTimeout(noticeTimer) 
+  clearTimeout(noticeTimer)
   setVolume(true)
   video.value.volume = volume.value
   state.notice = `当前音量 ${video.value.volume}`
   noticeTimer = setTimeout(() => state.notice = null, 1000)
 }
 const volumeDown = () => {
-  clearTimeout(noticeTimer) 
+  clearTimeout(noticeTimer)
   setVolume(false)
   video.value.volume = volume.value
   state.notice = `当前音量 ${video.value.volume}`
@@ -181,7 +181,7 @@ const volumeDown = () => {
 }
 const hotkey = (e: KeyboardEvent) => {
   // if (!(player.value.focus) || !url.value) return
-  if(!url.value) return
+  if (!url.value) return
   switch (e.code) {
     case 'ArrowDown':
       return volumeDown()
@@ -206,7 +206,8 @@ const remove = () => {
 init()
 onMounted(() => {
   video.value.volume = volume.value
-  video.value.addEventListener('canplay',()=>{state.notice=null})
+  video.value.addEventListener('canplay', () => { state.notice = null })
+  if (!isMobile) player.value.addEventListener('mousemove', autoHide)
   document.addEventListener('keydown', hotkey)
 })
 onBeforeRouteUpdate((to) => {
@@ -238,33 +239,33 @@ const tabClick = async (index: number) => {
   if (index == 1) await refreshFollows()
 }
 
-const videoClick = ()=> state.showController? play():autoHide()  
+const videoClick = () => state.showController ? play() : autoHide()
 
 </script>
 
 <template>
-  <div w-full h-full flex flex-col md:flex-row>
-    <div grow-3 md:grow-4 flex flex-col md:pr-4 b b-gray-7 md:b-r-solid>
+  <div w-full h-full flex flex-col lg:flex-row>
+    <div lg:grow-5 flex flex-col>
       <div flex p-2 gap-4 text-lg>
         <div hover:text-amber @click="$router.back" class="i-ri-arrow-left-line"></div>
         <div hover:text-amber grow w-25 text-center truncate>{{ room?.title }}</div>
         <div @click="info" hidden md:block :style="state.showInfo ? 'transform:rotate(180deg)' : ''"
           class="i-ri-arrow-right-s-line"></div>
-      </div>
-      <!-- <Link :src="'https://registry.npmmirror.com/hls.js/1.5.8/files/dist/hls.light.min.js'" tag="script"/> -->
-      <div ref="player" rounded-2 text-4 text-white @contextmenu.prevent="" @mousemove="autoHide"
+      </div> 
+      <div ref="player"   md:rounded-6px text-4 text-white @contextmenu.prevent="" bg-black cursor-default
         :class="{ 'cursor-none': !(state.showController), 'text-5': state.fullscreen, 'text-5 !pos-fixed left-0 right-0 top-0 bottom-0 z-10 ': state.webscreen }"
-        pos-relative h-full w-full overflow-hidden select-none line-height-none bg-black>
-
-        <video playsinline webkit-playsinline x5-video-player-type="h5" autoplay ref="video" w-full h-full pos-absolute
-          @click="videoClick" @dblclick="fullscreen" @play="playEvent" @pause="pauseEvent"></video>
+        pos-relative w-full overflow-hidden select-none h-full>
+        <div aspect-ratio-video>
+          <video playsinline webkit-playsinline x5-video-player-type="h5"  autoplay ref="video" w-full h-full pos-absolute  
+            @click="videoClick" @dblclick="fullscreen" @play="playEvent" @pause="pauseEvent"  ></video>
+        </div> 
         <div w-full h-full pos-absolute flex justify-center items-center text-6 v-show="state.notice">
           <span>{{ state.notice }}</span>
         </div>
         <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-1 flex items-center
           :class="{ 'py-3': state.fullscreen || state.webscreen }" bg-black bg-op-30>
-          <div @click="play" hover:text-amber
-            :class="state.paused ? 'i-ri-play-large-fill' : 'i-ri-pause-large-fill'"></div>
+          <div @click="play" hover:text-amber :class="state.paused ? 'i-ri-play-large-fill' : 'i-ri-pause-large-fill'">
+          </div>
           <!-- <div hover:text-amber @click="init" class="i-mdi-sync" style="transform:rotate(-45deg)"></div> -->
 
           <div hover:text-amber @click="follow" :class="state.follow ? 'i-ri-heart-fill' : 'i-ri-heart-line'"></div>
@@ -284,8 +285,9 @@ const videoClick = ()=> state.showController? play():autoHide()
         </div>
       </div>
     </div>
-    <div v-show="state.showInfo" grow-3 md:grow-0 md:w-70 lg:w-80 xl:w-100 flex flex-col px-4 md:pr-0 pt-4 md-pt-15>
-      <div flex items-center mb-4 gap-4>
+
+    <div v-show="state.showInfo" grow lg:grow-0 lg:w-80 xl:w-100 flex flex-col lg:pr-0 pt-3 lg-pt-15 lg:ml-3 lg:b-l-solid b lg:b-l-gray-7 lg:pl-3>
+      <div flex items-center mb-4 gap-4 b b-y-solid py-3 b-gray-7 px-4 >
         <img :src="room?.avatar" w-8 h-8 alt="" rounded-4>
         <div grow-1 w-20>
           <div truncate>{{ room?.nickname }}</div>
@@ -301,7 +303,7 @@ const videoClick = ()=> state.showController? play():autoHide()
       </div>
       <Tabs :grow="true" @tabClick="tabClick" class="!h-[calc(100%-5.5rem)]">
         <Tab title="聊天">
-          聊天 
+          聊天
         </Tab>
         <Tab title="关注">
           <router-link v-for="i in follows" :key="`${i.siteId}/${i.roomId}`" :to="`/play/${i.siteId}/${i.roomId}`" flex
