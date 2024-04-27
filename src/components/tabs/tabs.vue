@@ -22,11 +22,13 @@ const tabs = computed(() => map(children, i => i.title))
 
 <template>
   <div h-full>
-    <div flex p-1 gap-1 overflow-y-auto :class="[grow ? '' : justify,]">
-      <div v-for="tab, index in tabs" rounded py-1 text-center px-2 cursor-pointer hover:text-amber 
+    <div w-full box-border>
+    <div flex p1 gap-1  box-border :class="[grow ? '' : justify,]" overflow-x-auto >
+        <div v-for="tab, index in tabs" shrink-0 rounded py-1 text-center px-2 cursor-pointer hover:text-amber 
         :class="{ 'text-amber': active == index, 'grow': grow }" @click="click(index)">{{ tab }}</div>
+      </div>
     </div>
-    <div class="h-[calc(100%-2.25rem)]" box-border py-2>
+    <div class="h-[calc(100%-2.5rem)] scrolly" box-border py-1 >
       <!-- <Swipe v-if="swipeable" v-model:active="active" w-full h-full :lazy="lazy" :loop="swipeloop">
         <component :is="$slots.default"></component>
       </Swipe> -->

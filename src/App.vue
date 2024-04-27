@@ -33,7 +33,7 @@ const navs = [
     </router-link>
   </div>
 
-  <main h-100vh text-sm box-border pt-2 pb-15 md:ml-17.5 md:pb-2>
+  <main h-100vh text-xs md:text-sm xl:text-base box-border pt-2 pb-15 md:ml-17.5 md:pb-2>
     <div h-full class="scrolly" px-3>
       <router-view v-slot="{ Component }">
         <keep-alive :exclude="['play']">

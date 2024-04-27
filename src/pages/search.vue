@@ -1,6 +1,5 @@
-<script setup lang="ts">
-import { ref } from 'vue';
-import type { onLoad, onRefresh } from '../components/list/type';
+<script setup lang="ts"> 
+import type { onLoad } from '../components/list/type';
 import { sites } from '../store'
 
 
@@ -34,9 +33,9 @@ const load: onLoad = (setStatus) => {
   }, msg => { console.log(msg); setStatus('loaderror') })
 }
 
-const refresh: onRefresh = async (ok) => {
-  search().finally(ok)
-}
+// const refresh: onRefresh = async (ok) => {
+//   search().finally(ok)
+// }
 
 const tabClick = (index: number) => {
   if (goRoom()) return
@@ -62,17 +61,17 @@ const goSearch = () => {
 <template>
   <div text-center py-1>
     <div class="w-60%  max-w-md pos-relative inline-block">
-      <input type="text" v-model="kw" box-border w-full py-2 pl-3 pr-9 text-white bg-transparent b-1 b-green rounded-6
-        outline-0 text-base @keydown.enter="goSearch" placeholder="请输入房间号或关键字">
+      <input md:text-4 type="text" v-model="kw" box-border w-full py-2.5  pl-3 pr-9 text-white bg-transparent b-1 b-green rounded-6
+        outline-0 @keydown.enter="goSearch" placeholder="请输入房间号或关键字">
       <div class="i-ri-search-line top-50% " absolute right-3 @click="goSearch" style="transform:translateY(-50%)">
       </div>
     </div>
   </div>
-  <div class="h-[calc(100%-3.25rem)]">
+  <div class="h-[calc(100%-3rem)]">
     <Tabs v-model:active="active" @tabClick="tabClick">
       <Tab v-for="site in sites" :title="site.name" :key="site.id">
         <template v-if="status == 'finished'">
-          <List @load="load" @refresh="refresh" v-if="site.search.list.value.length">
+          <List @load="load"  v-if="site.search.list.value.length">
             <Rooms :site-id="site.id" :list="site.search.list"> </Rooms>
           </List>
           <div v-else>

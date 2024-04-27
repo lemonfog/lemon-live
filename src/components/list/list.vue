@@ -5,11 +5,11 @@ const props = withDefaults(defineProps<{
   errorText?: string
   immediate?: boolean
   offset?: number
-  refresh?: boolean
+  // refresh?: boolean
 }>(), {
   immediate: true,
   offset: 50,
-  refresh: true,
+  refresh: false,
   finshedText: '没有更多了',
   errorText: '加载失败，点击重新加载'
 })
@@ -36,11 +36,11 @@ onMounted(() => {
 })
 
 onActivated(() => {
-  root.value!.scrollTop = scrollTop.value
-  root.value.addEventListener('scroll', scroll)
+  parentScroll.value!.scrollTop = scrollTop.value
+  parentScroll.value.addEventListener('scroll', scroll)
 })
 const removehook = () => {
-  root.value.removeEventListener('scroll', scroll)
+  parentScroll.value.removeEventListener('scroll', scroll)
 }
 onDeactivated(removehook)
 onBeforeUnmount(removehook)
@@ -53,18 +53,19 @@ const reLoad = () => {
   emit('load', setStatus)
 }
 
-const onRefresh = (ok: () => void) => {
-  if (scrollTop.value == 0) emit('refresh', ok)
-}
+// const onRefresh = (ok: () => void) => {
+//   if (scrollTop.value == 0) emit('refresh', ok)
+// }
 </script>
 
 <template>
   <div ref="root"  h-full select-none>
+    <slot/>
 
-    <Refresh v-if="props.refresh" @refresh="onRefresh">
+    <!-- <Refresh v-if="props.refresh" @refresh="onRefresh">
       <component :is="$slots.default"></component>
     </Refresh>
-    <component v-else :is="$slots.default"></component>
+    <component v-else :is="$slots.default"></component> -->
 
     <div v-show="status == 'loading'" text-center>加载中...</div>
     <div v-if="status == 'finshed'" text-center>{{ props.finshedText }}</div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { onLoad, onRefresh } from '../components/list/type';
+import type { onLoad } from '../components/list/type';
 import { sites } from '../store'
 
 const active = ref(0)
@@ -17,25 +17,25 @@ const load: onLoad = (setStatus) => {
 }
 
 
-const refresh: onRefresh = (ok) => {
-  const recommend = sites[active.value].recommend
-  useSiteFetch(sites[active.value].id, 'getRecommendRooms').then(data => {
-    console.log(data)
-    recommend.list.value = data.list
-    recommend.hasMore = data.hasMore
-    recommend.page=1
-  }).finally(ok)
-}
+// const refresh: onRefresh = (ok) => {
+//   const recommend = sites[active.value].recommend
+//   useSiteFetch(sites[active.value].id, 'getRecommendRooms').then(data => {
+//     console.log(data)
+//     recommend.list.value = data.list
+//     recommend.hasMore = data.hasMore
+//     recommend.page=1
+//   }).finally(ok)
+// }
 
 </script>
 
 <template>
-  <Tabs v-model:active="active" overflow-auto>
+  <Tabs v-model:active="active">
     <Tab v-for="site in sites" :key="site.id" :title="site.name">
       <!-- <div v-if="!site.recommend.list.value.length">
         没有数据
       </div> -->
-      <List @load="load" @refresh="refresh" :immediate="true" h-full>
+      <List @load="load"  :immediate="true" h-full>
         <Rooms :site-id="site.id" :list="site.recommend.list"></Rooms>
       </List>
     </Tab>

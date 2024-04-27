@@ -242,6 +242,8 @@ const tabClick = async (index: number) => {
   if (index == 1) await refreshFollows()
 }
 
+const videoClick = ()=> state.showController? play():autoHide()  
+
 </script>
 
 <template>
@@ -259,7 +261,7 @@ const tabClick = async (index: number) => {
         pos-relative h-full w-full overflow-hidden select-none line-height-none bg-black>
 
         <video playsinline webkit-playsinline x5-video-player-type="h5" autoplay ref="video" w-full h-full pos-absolute
-          @click="play" @dblclick="fullscreen" @play="playEvent" @pause="pauseEvent"></video>
+          @click="videoClick" @dblclick="fullscreen" @play="playEvent" @pause="pauseEvent"></video>
         <div w-full h-full pos-absolute flex justify-center items-center text-6 v-show="state.notice">
           <span>{{ state.notice }}</span>
         </div>
