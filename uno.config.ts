@@ -1,28 +1,28 @@
-import { defineConfig, presetUno,presetIcons,presetAttributify,transformerDirectives } from 'unocss' 
+import { defineConfig, presetUno, presetIcons, presetAttributify, transformerDirectives } from 'unocss'
 
 
 export default defineConfig({
   presets: [
     presetUno({
-      preflight:false
+      preflight: false
     }),
-    presetAttributify() ,
-    presetIcons({ 
-      collections:{
+    presetAttributify(),
+    presetIcons({
+      collections: {
         // heroicons:()=>import('@iconify-json/heroicons/icons.json').then(i=>i.default), 
         // mdi:()=>import('@iconify-json/mdi/icons.json').then(i=>i.default),
-        ri:()=>import('@iconify-json/ri/icons.json').then(i=>i.default) 
+        ri: () => import('@iconify-json/ri/icons.json').then(i => i.default),
       },
-      scale:1.5,
-      extraProperties:{
+      scale: 1.5,
+      extraProperties: {
         'display': 'inline-block',
         'vertical-align': 'sub',
-        'cursor':'pointer', 
+        'cursor': 'pointer',
       }
     })
   ],
-  content:{
-    pipeline:{
+  content: {
+    pipeline: {
       include: [
         // the default
         ///\.(vue|svelte|[jt]sx|mdx?|astro|elm|php|phtml|html)($|\?)/,
@@ -36,10 +36,10 @@ export default defineConfig({
       ],
     }
   },
-  shortcuts: { 
+  shortcuts: {
   },
-  rules:[
-    ['shadow',{'box-shadow':'var(--shadow)'}]
+  rules: [
+    ['shadow', { 'box-shadow': 'var(--shadow)' }]
   ]
   // transformers: [
   //   transformerDirectives(),

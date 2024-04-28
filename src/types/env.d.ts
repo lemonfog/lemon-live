@@ -122,6 +122,7 @@ declare global {
     introduction: string;
     notice?: string;
     url?: string;
+    ws?:string
     stream: LiveStream;
   };
   /** 主播信息 */

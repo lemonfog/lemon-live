@@ -1,4 +1,5 @@
-const baseUrl = 'https://lemonlive.deno.dev/api/'
+// const baseUrl = 'https://lemonlive.deno.dev/api/'
+const baseUrl = 'http://localhost:8000/api/'
 
 export const useSiteFetch = (id: siteId, method: LiveSiteMethod, params?: QueryParams) => {
   const controller = new AbortController()

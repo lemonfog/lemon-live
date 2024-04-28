@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { sites, addFollow, removeFollow, volume, setVolume } from '../store'
 import { Flv, Hls } from 'lemon-mse';
+import danmakuOpen from '../assets/icons/danmaku_open.png'
+import danmakuClose from '../assets/icons/danmaku_close.png'
 
 // definePage({
 //   path: '/play/:siteId/:id', 
@@ -37,6 +39,7 @@ let autoHideTimer: number
 
 const player = ref() as Ref<HTMLElement>
 const video = ref() as Ref<HTMLMediaElement>
+const dm = ref() as Ref<HTMLElement>
 
 const route = useRoute()
 
@@ -90,8 +93,8 @@ watch(url, () => {
   return clearTimeout(noticeTimer)
 })
 
-watch(type, (type) => {
-  if (type == 'flv') {
+watch(type, () => {
+  if (type.value == 'flv') {
     state.hls?.destroy()
     state.hls = undefined
     return
@@ -100,6 +103,94 @@ watch(type, (type) => {
   state.flv = undefined
 })
 
+const danmakuIcon = ref(danmakuOpen)
+const danmaku = () => {
+  if (danmakuIcon.value == danmakuOpen) {
+    wsClose()
+    danmakuIcon.value = danmakuClose
+    return
+  }
+  danmakuIcon.value = danmakuOpen
+  wsStart()
+}
+const danmakuClean = () => {
+  dm.value.innerHTML = ''
+}
+let ws: WebSocket | null
+let dmCount = 0
+const showScrollBtn = ref(false)
+
+let alwaysBottom = true
+
+const addDm = (nick: string, msg: string) => {
+  const n = document.createElement('div')
+  n.innerHTML = `${nick}：${msg}`
+  dm.value.appendChild(n)
+}
+
+const dmOb = new ResizeObserver(()=>{
+  if(dm.value.scrollHeight > dm.value.clientHeight) {
+    showScrollBtn.value = true
+    dmOb.unobserve(dm.value)
+    return 
+  }
+  showScrollBtn.value = false
+}) 
+ 
+const dmScroll = ()=>{  
+  if(dm.value.scrollTop==(dm.value.scrollHeight - dm.value.clientHeight)) return
+  alwaysBottom = false
+  dmOb.unobserve(dm.value)
+  dm.value.removeEventListener('scroll',dmScroll)
+}
+const dmBottomBtn = ()=>{
+  alwaysBottom = true
+  dm.value.addEventListener('scroll',dmScroll)
+}
+
+const wsStart = () => {
+  const url = room.value?.ws
+  if (!url) return
+  if (ws) return
+  ws = new WebSocket(url)
+  ws.onopen = () => {
+    addDm('系统', '开始连接弹幕服务器')
+    dmOb.observe(dm.value) 
+    dm.value.addEventListener('scroll',dmScroll)
+    danmakuIcon.value = danmakuOpen
+    ws!.send(JSON.stringify({ command: "subscribeNotice", data: ["getMessageNotice"], reqId: Date.now().toString() }))
+  }
+  ws.onerror = () => {
+    danmakuIcon.value = danmakuClose
+    addDm('系统', '弹幕服务器连接失败')
+  }
+  ws.onmessage = (e) => {
+    dmCount++
+    if (dmCount == 1) return addDm('系统', '弹幕服务器连接正常')
+    if(dmCount ==100) danmakuClean()
+    const { sendNick, content } = JSON.parse(e.data).data
+    addDm(sendNick, content)
+    if(alwaysBottom)  dm.value.scrollTop = dm.value.scrollHeight 
+  }
+}
+const wsClose = () => {
+
+  if (!ws) return
+  ws.close()
+  ws = null
+  dmCount = 0
+  if (dm.value) {
+    addDm('系统', '弹幕服务器断开连接')
+    danmakuIcon.value = danmakuClose
+  } 
+  dmOb.unobserve(dm.value)
+}
+watch(room, () => wsStart())
+
+
+onBeforeUnmount(() => {
+  wsClose()
+})
 const init = () => {
   const { site, id } = route.meta
   const _room = route.meta.site.follows[id]
@@ -228,6 +319,8 @@ onBeforeRouteUpdate((to) => {
   return true
 })
 watch(() => route.params, () => {
+  wsClose()
+  danmakuClean()
   init()
 })
 
@@ -244,21 +337,21 @@ const videoClick = () => state.showController ? play() : autoHide()
 </script>
 
 <template>
-  <div w-full h-full flex flex-col lg:flex-row>
+  <div w-full h-full flex flex-col lg:flex-row box-border md:pb-2>
     <div lg:grow-5 flex flex-col>
       <div flex p-2 gap-4 text-lg>
         <div hover:text-amber @click="$router.back" class="i-ri-arrow-left-line"></div>
         <div hover:text-amber grow w-25 text-center truncate>{{ room?.title }}</div>
         <div @click="info" hidden md:block :style="state.showInfo ? 'transform:rotate(180deg)' : ''"
           class="i-ri-arrow-right-s-line"></div>
-      </div> 
-      <div ref="player"   md:rounded-6px text-4 text-white @contextmenu.prevent="" bg-black cursor-default
+      </div>
+      <div ref="player" md:rounded-6px text-4 text-white @contextmenu.prevent="" bg-black cursor-default
         :class="{ 'cursor-none': !(state.showController), 'text-5': state.fullscreen, 'text-5 !pos-fixed left-0 right-0 top-0 bottom-0 z-10 ': state.webscreen }"
         pos-relative w-full overflow-hidden select-none h-full>
         <div aspect-ratio-video>
-          <video playsinline webkit-playsinline x5-video-player-type="h5"  autoplay ref="video" w-full h-full pos-absolute  
-            @click="videoClick" @dblclick="fullscreen" @play="playEvent" @pause="pauseEvent"  ></video>
-        </div> 
+          <video playsinline webkit-playsinline x5-video-player-type="h5" autoplay ref="video" w-full h-full
+            pos-absolute @click="videoClick" @dblclick="fullscreen" @play="playEvent" @pause="pauseEvent"></video>
+        </div>
         <div w-full h-full pos-absolute flex justify-center items-center text-6 v-show="state.notice">
           <span>{{ state.notice }}</span>
         </div>
@@ -286,8 +379,9 @@ const videoClick = () => state.showController ? play() : autoHide()
       </div>
     </div>
 
-    <div v-show="state.showInfo" grow lg:grow-0 lg:w-80 xl:w-100 flex flex-col lg:pr-0 pt-3 lg-pt-15 lg:ml-3 lg:b-l-solid b lg:b-l-gray-7 lg:pl-3>
-      <div flex items-center mb-4 gap-4 b b-y-solid py-3 b-gray-7 px-4 >
+    <div v-show="state.showInfo" grow min-h-50 lg:grow-0 lg:w-80 xl:w-100 flex flex-col lg:pr-0 pt-3 lg-pt-12 lg:ml-3
+      box-border lg:b-l-solid b lg:b-l-gray-7 lg:pl-3>
+      <div flex items-center line-height-none gap-4 b b-y-solid py-3 b-gray-7 px-4>
         <img :src="room?.avatar" w-8 h-8 alt="" rounded-4>
         <div grow-1 w-20>
           <div truncate>{{ room?.nickname }}</div>
@@ -301,9 +395,15 @@ const videoClick = () => state.showController ? play() : autoHide()
           <span>{{ room?.online }}</span>
         </div>
       </div>
-      <Tabs :grow="true" @tabClick="tabClick" class="!h-[calc(100%-5.5rem)]">
-        <Tab title="聊天">
-          聊天
+      <Tabs :grow="true" @tabClick="tabClick" class="!h-[calc(100%-3.75rem)]">
+        <Tab title="聊天" pos-relative>
+          <div pos-absolute top-0 right-4 text-4 flex flex-col gap-3>
+            <img w-1.5em cursor-pointer @click="danmaku" :src="danmakuIcon" />
+            <div text-green-5 @click="danmakuClean" class="i-ri-delete-bin-3-line"></div>
+            <div v-show="showScrollBtn" @click="dmBottomBtn" text-green-5 class="i-ri-arrow-down-circle-line"> </div>
+          </div>
+          <div ref="dm" h-full pl-2 box-border class="scrolly">
+          </div>
         </Tab>
         <Tab title="关注">
           <router-link v-for="i in follows" :key="`${i.siteId}/${i.roomId}`" :to="`/play/${i.siteId}/${i.roomId}`" flex
