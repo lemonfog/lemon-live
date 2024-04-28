@@ -114,7 +114,10 @@ const danmaku = () => {
   wsStart()
 }
 const danmakuClean = () => {
+  dm.value.scrollTop = 0
   dm.value.innerHTML = ''
+  showScrollBtn.value = false
+  dmOb.observe(dm.value)
 }
 let ws: WebSocket | null
 let dmCount = 0
@@ -124,30 +127,31 @@ let alwaysBottom = true
 
 const addDm = (nick: string, msg: string) => {
   const n = document.createElement('div')
-  n.innerHTML = `${nick}：${msg}`
+  n.innerHTML = `<span text-gray text-op-60> ${nick}：</span><span>${msg}</span>`
   dm.value.appendChild(n)
 }
 
-const dmOb = new ResizeObserver(()=>{
-  if(dm.value.scrollHeight > dm.value.clientHeight) {
+const dmOb = new ResizeObserver(() => {
+  if (dm.value.scrollHeight > dm.value.clientHeight) {
     showScrollBtn.value = true
     dmOb.unobserve(dm.value)
-    return 
+    return
   }
   showScrollBtn.value = false
-}) 
- 
-const dmScroll = ()=>{  
-  if(dm.value.scrollTop==(dm.value.scrollHeight - dm.value.clientHeight)) return
+})
+
+const dmScroll = () => {
+  if (dm.value.scrollTop == (dm.value.scrollHeight - dm.value.clientHeight)) return
   alwaysBottom = false
   dmOb.unobserve(dm.value)
-  dm.value.removeEventListener('scroll',dmScroll)
+  dm.value.removeEventListener('scroll', dmScroll)
 }
-const dmBottomBtn = ()=>{
+const dmBottomBtn = () => {
   alwaysBottom = true
-  dm.value.addEventListener('scroll',dmScroll)
+  dm.value.scrollTop = dm.value.scrollHeight
+  dm.value.addEventListener('scroll', dmScroll)
 }
-
+let wsTimer: number
 const wsStart = () => {
   const url = room.value?.ws
   if (!url) return
@@ -155,26 +159,30 @@ const wsStart = () => {
   ws = new WebSocket(url)
   ws.onopen = () => {
     addDm('系统', '开始连接弹幕服务器')
-    dmOb.observe(dm.value) 
-    dm.value.addEventListener('scroll',dmScroll)
+    dmOb.observe(dm.value)
+    dm.value.addEventListener('scroll', dmScroll)
     danmakuIcon.value = danmakuOpen
     ws!.send(JSON.stringify({ command: "subscribeNotice", data: ["getMessageNotice"], reqId: Date.now().toString() }))
+    wsTimer = setInterval(() => {
+      ws!.send('ping')
+    }, 60000)
   }
   ws.onerror = () => {
     danmakuIcon.value = danmakuClose
     addDm('系统', '弹幕服务器连接失败')
+    clearInterval(wsTimer)
   }
   ws.onmessage = (e) => {
     dmCount++
     if (dmCount == 1) return addDm('系统', '弹幕服务器连接正常')
-    if(dmCount ==100) danmakuClean()
+    if (dmCount % 200 == 0) danmakuClean()
     const { sendNick, content } = JSON.parse(e.data).data
     addDm(sendNick, content)
-    if(alwaysBottom)  dm.value.scrollTop = dm.value.scrollHeight 
+    if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
   }
 }
 const wsClose = () => {
-
+  clearInterval(wsTimer)
   if (!ws) return
   ws.close()
   ws = null
@@ -182,15 +190,11 @@ const wsClose = () => {
   if (dm.value) {
     addDm('系统', '弹幕服务器断开连接')
     danmakuIcon.value = danmakuClose
-  } 
+  }
   dmOb.unobserve(dm.value)
 }
 watch(room, () => wsStart())
 
-
-onBeforeUnmount(() => {
-  wsClose()
-})
 const init = () => {
   const { site, id } = route.meta
   const _room = route.meta.site.follows[id]
@@ -200,18 +204,25 @@ const init = () => {
   }
   clearTimeout(noticeTimer)
   state.notice = '加载中...'
+  nextTick(() => addDm('系统', '开始获取直播间信息'))
   useSiteFetch(site.id, 'getRoomDetail', { id }).then((data) => {
     room.value = data
+    if(state.follow) addFollow(data)
+    nextTick(() => addDm('系统', '获取直播间信息成功'))
     if (!data.status) return state.notice = '未开播！'
+
   }, (msg) => {
     state.notice = msg
+    nextTick(() => addDm('系统', '获取直播间信息失败'))
   }).finally(() => clearTimeout(noticeTimer))
+
+
 }
 
 const follow = () => {
   if (!(room.value)) return
   const { id } = route.meta.site
-  state.follow = state.follow ? removeFollow(id, room.value.roomId) : addFollow(id, room.value)
+  state.follow = state.follow ? removeFollow(id, room.value.roomId) : addFollow(room.value)
 }
 
 const play = () => {
@@ -259,15 +270,15 @@ const pauseEvent = () => {
 const volumeUp = () => {
   clearTimeout(noticeTimer)
   setVolume(true)
-  video.value.volume = volume.value
-  state.notice = `当前音量 ${video.value.volume}`
+  video.value.volume = volume.value / 100
+  state.notice = `当前音量 ${volume.value}`
   noticeTimer = setTimeout(() => state.notice = null, 1000)
 }
 const volumeDown = () => {
   clearTimeout(noticeTimer)
   setVolume(false)
-  video.value.volume = volume.value
-  state.notice = `当前音量 ${video.value.volume}`
+  video.value.volume = volume.value / 100
+  state.notice = `当前音量 ${volume.value}`
   noticeTimer = setTimeout(() => state.notice = null, 1000)
 }
 const hotkey = (e: KeyboardEvent) => {
@@ -287,6 +298,7 @@ const remove = () => {
   clearTimeout(clickTimer)
   clearTimeout(autoHideTimer)
   clearTimeout(noticeTimer)
+  wsClose()
   document.removeEventListener('keydown', hotkey)
   if (type.value) {
     // const type = types.value[state.type].toLowerCase() as 'flv' | 'hls'
@@ -296,7 +308,7 @@ const remove = () => {
 
 init()
 onMounted(() => {
-  video.value.volume = volume.value
+  video.value.volume = volume.value / 100
   video.value.addEventListener('canplay', () => { state.notice = null })
   if (!isMobile) player.value.addEventListener('mousemove', autoHide)
   document.addEventListener('keydown', hotkey)
@@ -352,7 +364,7 @@ const videoClick = () => state.showController ? play() : autoHide()
           <video playsinline webkit-playsinline x5-video-player-type="h5" autoplay ref="video" w-full h-full
             pos-absolute @click="videoClick" @dblclick="fullscreen" @play="playEvent" @pause="pauseEvent"></video>
         </div>
-        <div w-full h-full pos-absolute flex justify-center items-center text-6 v-show="state.notice">
+        <div w-full h-full pos-absolute top-0 z-1 flex justify-center items-center text-6 v-show="state.notice">
           <span>{{ state.notice }}</span>
         </div>
         <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-1 flex items-center

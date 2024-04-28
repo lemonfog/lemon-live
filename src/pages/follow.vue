@@ -18,7 +18,8 @@ const tabClick = (index: number) =>  index == 0 ? Promise.all(map(sites, useChec
   <div class="h-[calc(100%-2rem)]">
     <Tabs @tab-click="tabClick">
       <tab v-for="site in follows" :title="site.name" @inited="tabClick">
-        <Follows :list="site.list"></Follows>
+        <!-- <Follows :list="site.list"></Follows> -->
+        <Rooms :list="site.list"></Rooms>
       </tab>
     </Tabs>
   </div>

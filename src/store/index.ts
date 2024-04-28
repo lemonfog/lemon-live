@@ -44,12 +44,12 @@ export const sites: site[] = [
 
 export const volume = ref((() => {
   const v = localStorage.getItem('volume')
-  return v ? parseFloat(v) : 0.3
+  return v ? parseInt(v):70
 })())
 
-export const setVolume = (isAdd: boolean) => {
-  volume.value = isAdd ? Math.min(1, parseFloat((volume.value + 0.05).toFixed(2)))
-    : Math.max(0, parseFloat((volume.value - 0.05).toFixed(2)))
+export const setVolume = (isAdd: boolean) => { 
+  volume.value = isAdd ? Math.min(100, volume.value  + 5)
+    : Math.max(0,  volume.value  - 5)
 }
 
 watch(volume, () => localStorage.setItem('volume', volume.value.toString()))
@@ -64,12 +64,12 @@ export function getFollows(site: siteId) {
   return (val ? JSON.parse(val) : {}) as { [x: string]: LiveRoomItem }
 }
 
-export function addFollow(siteId: siteId, room: LiveRoomItem) {
-  const site = sites.find(i => i.id = siteId)!
+export function addFollow(room: LiveRoomItem) {
+  const site = sites.find(i => i.id = room.siteId)!
   // if (site == undefined) return false
   room.siteId = site.id
   site.follows[room.roomId] = { ...room, stream: undefined }
-  localStorage.setItem('follows-' + siteId, JSON.stringify(site.follows))
+  localStorage.setItem('follows-' + room.siteId, JSON.stringify(site.follows))
   return Reflect.has(site.follows, room.roomId)
 }
 

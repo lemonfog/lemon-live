@@ -36,7 +36,7 @@ const load: onLoad = (setStatus) => {
         没有数据
       </div> -->
       <List @load="load"  :immediate="true" h-full>
-        <Rooms :site-id="site.id" :list="site.recommend.list"></Rooms>
+        <Rooms :list="site.recommend.list"></Rooms>
       </List>
     </Tab>
   </Tabs>

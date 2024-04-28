@@ -72,7 +72,7 @@ const goSearch = () => {
       <Tab v-for="site in sites" :title="site.name" :key="site.id">
         <template v-if="status == 'finished'">
           <List @load="load"  v-if="site.search.list.value.length">
-            <Rooms :site-id="site.id" :list="site.search.list"> </Rooms>
+            <Rooms :list="site.search.list"> </Rooms>
           </List>
           <div v-else>
             什么也没有找到

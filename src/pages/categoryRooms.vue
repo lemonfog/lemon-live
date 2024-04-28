@@ -81,7 +81,7 @@ onActivated(function () {
     </div>
     <div v-if="name" class="h-[calc(100%-3.25rem)] scrolly">
       <List :key="fullPath" @load="load" @refresh="refresh">
-        <Rooms :site-id="$route.meta.site?.id" :list="state.list"></Rooms>
+        <Rooms :list="state.list"></Rooms>
       </List>
     </div>
   </div>

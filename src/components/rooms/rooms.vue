@@ -1,6 +1,5 @@
 <script setup lang="ts">
-defineProps<{
-  siteId: siteId,
+defineProps<{ 
   list: Ref<LiveRoomItem[]>
 }>()
 
@@ -14,7 +13,7 @@ defineProps<{
     >
     <!-- style="grid-template-columns: repeat(auto-fill, 8rem);" -->
 
-    <router-link :to="`/play/${siteId}/${room.roomId}`" v-for="room in list.value" :key="room.roomId" shadow rounded-2
+    <router-link :to="`/play/${room.siteId}/${room.roomId}`" v-for="room in list.value" :key="room.roomId" shadow rounded-2
       b-2px  b-solid b-transparent hover:b-amber>
       <div pos-relative text-3 text-rose-4 rounded-t-2 w-full aspect-video>
         <img block v-lazy="room.cover" h-full  rounded-2 select-none>

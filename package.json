@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
-    "prod": "vite build && cd f:/deno/lemonlive && deployctl deploy --prod && cd f:/vue/lemonlive"
+    "prod": "vite build && cd f:/deno/lemonlive && deployctl deploy --prod && cd f:/vue/lemonlive",
+    "git":"vite build github/dist"
   },
   "dependencies": {
     "lemon-mse": "^0.1.7",
