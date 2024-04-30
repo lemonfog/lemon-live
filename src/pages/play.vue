@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { sites, addFollow, removeFollow, volume, setVolume } from '../store'
+import danmakuIconOpen from '../assets/icons/danmaku_open.png'
+import danmakuIconClose from '../assets/icons/danmaku_close.png'
+import { sites, addFollow, removeFollow, volume, setVolume, toggleSideDmOpen, toggleCanvasDmOpen, dmSideOpen, dmCanvasOpen } from '../store'
 import { Flv, Hls } from 'lemon-mse';
-import danmakuOpen from '../assets/icons/danmaku_open.png'
-import danmakuClose from '../assets/icons/danmaku_close.png'
 
 // definePage({
 //   path: '/play/:siteId/:id', 
@@ -94,24 +94,6 @@ watch(type, () => {
   state.flv = undefined
 })
 
-const danmakuIcon = ref(danmakuOpen)
-const videoDanmakuIcon = ref(danmakuOpen)
-const danmaku = () => {
-  if (danmakuIcon.value == danmakuOpen) {
-    // wsClose()
-    danmakuIcon.value = danmakuClose
-    return
-  }
-  danmakuIcon.value = danmakuOpen
-  // wsStart()
-}
-const videoDmbtn = () => {
-  if (videoDanmakuIcon.value == danmakuOpen) {
-    videoDanmakuIcon.value = danmakuClose
-    return
-  }
-  videoDanmakuIcon.value = danmakuOpen
-}
 
 const danmakuClean = () => {
   dm.value.scrollTop = 0
@@ -126,27 +108,25 @@ const showScrollBtn = ref(false)
 let alwaysBottom = true
 const canvas = ref()
 const dmk = useDanmaku(canvas)
-
 let cvTimer: number
 let cvOb = new ResizeObserver((entries) => {
   clearTimeout(cvTimer)
-  const cv = entries[0] 
-  cvTimer = setTimeout(() => { 
-    if(!canvas.value||!dmk.value) return 
+  const cv = entries[0]
+  cvTimer = setTimeout(() => {
+    if (!canvas.value || !dmk.value) return
     canvas.value.width = cv.contentRect.width
-    canvas.value.height = cv.contentRect.height 
-    let a =  canvas.value.width/50 | 0 
-    a = Math.max(12,Math.min(a,30))  
-    dmk.value.setFont( a)  
-    dmk.value.setSpeed(a/ 5|0)
+    canvas.value.height = cv.contentRect.height
+    let a = canvas.value.width / 50 | 0
+    a = Math.max(12, Math.min(a, 30))
+    dmk.value.setFont(a) 
     dmk.value.setGap(a * 0.75)
     dmk.value.resize()
-  }, 50)
+  }, 100)
 })
 
 const addDm = (nick: string, msg: string) => {
-  if (videoDanmakuIcon.value == danmakuOpen) dmk.value?.add(msg)
-  if (!state.showInfo || danmakuIcon.value == danmakuClose) return
+  if (dmCanvasOpen.value) dmk.value?.add(msg)
+  if (!state.showInfo || !dmSideOpen.value) return
   const n = document.createElement('div')
   n.innerHTML = `<span text-gray text-op-60> ${nick}：</span><span>${msg}</span>`
   dm.value.appendChild(n)
@@ -186,7 +166,7 @@ let wsTimer: number
 const wsStart = () => {
   const url = room.value?.ws
   if (!url) return
-  if (ws) return
+  if (ws || (!dmCanvasOpen.value&&!dmSideOpen.value)) return
   ws = new WebSocket(url)
   ws.onopen = () => {
     // clearTimeout(wsTimer)
@@ -196,7 +176,6 @@ const wsStart = () => {
     dmOb.observe(dm.value)
     cvOb.observe(canvas.value)
     dm.value.addEventListener('scroll', dmScroll)
-    danmakuIcon.value = danmakuOpen
     ws?.send(JSON.stringify({ command: "subscribeNotice", data: ["getMessageNotice"], reqId: Date.now().toString() }))
     wsTimer = setInterval(() => {
       // if (!ws) return 
@@ -205,7 +184,8 @@ const wsStart = () => {
   }
   ws.onerror = () => {
     clearInterval(wsTimer)
-    danmakuIcon.value = danmakuClose
+    // dmCanvasOpen.value = false
+    // dmSideOpen.value = false
     addDm('系统', '弹幕服务器连接失败')
   }
   ws.onmessage = (e) => {
@@ -225,13 +205,14 @@ const wsClose = () => {
   dmCount = 0
   if (dm.value) {
     addDm('系统', '弹幕服务器断开连接')
-    danmakuIcon.value = danmakuClose
+    // dmCanvasOpen.value = false
+    // dmSideOpen.value = false
   }
   dmOb.unobserve(dm.value)
 }
 watch(room, () => wsStart())
 watchEffect(() => {
-  if (danmakuIcon.value == danmakuClose && videoDanmakuIcon.value == danmakuClose) wsClose()
+  if (!dmSideOpen.value && !dmCanvasOpen.value) wsClose()
   if (!ws) wsStart()
 })
 
@@ -349,7 +330,7 @@ const remove = () => {
 }
 
 init()
-onMounted(() => { 
+onMounted(() => {
   video.value.volume = volume.value / 100
   video.value.addEventListener('canplay', () => { state.notice = null })
   if (!isMobile) player.value.addEventListener('mousemove', autoHide)
@@ -409,7 +390,7 @@ const videoClick = () => state.showController ? play() : autoHide()
         <div w-full h-full pos-absolute top-0 z-1 flex justify-center items-center text-6 v-show="state.notice">
           <span>{{ state.notice }}</span>
         </div>
-        <canvas ref="canvas" width="0" height="0" pos-absolute top-0 w-full h-full z-1 ></canvas>
+        <canvas ref="canvas" width="0" height="0" pos-absolute top-0 w-full h-full z-1></canvas>
         <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-1 flex items-center
           :class="{ 'py-3': state.fullscreen || state.webscreen }" bg-black bg-op-30>
           <div @click="play" hover:text-amber :class="state.paused ? 'i-ri-play-large-fill' : 'i-ri-pause-large-fill'">
@@ -418,7 +399,7 @@ const videoClick = () => state.showController ? play() : autoHide()
 
           <div hover:text-amber @click="follow" :class="state.follow ? 'i-ri-heart-fill' : 'i-ri-heart-line'"></div>
           <div hover:text-amber @click="init" class="i-ri-refresh-line"></div>
-          <img w-1.5em cursor-pointer @click="videoDmbtn" :src="videoDanmakuIcon" />
+          <img w-1.5em cursor-pointer @click="toggleCanvasDmOpen" :src="dmCanvasOpen ? danmakuIconOpen : danmakuIconClose" />
 
           <div grow></div>
           <template v-if="types.length">
@@ -454,7 +435,7 @@ const videoClick = () => state.showController ? play() : autoHide()
       <Tabs :grow="true" @tabClick="tabClick" class="!h-[calc(100%-3.75rem)]">
         <Tab title="聊天" pos-relative>
           <div pos-absolute top-0 right-4 text-4 flex flex-col gap-3>
-            <img w-1.5em cursor-pointer @click="danmaku" :src="danmakuIcon" />
+            <img w-1.5em cursor-pointer @click="toggleSideDmOpen" :src="dmSideOpen ? danmakuIconOpen : danmakuIconClose" />
             <div text-green-5 @click="danmakuClean" class="i-ri-delete-bin-3-line"></div>
             <div v-show="showScrollBtn" @click="dmBottomBtn" text-green-5 class="i-ri-arrow-down-circle-line"> </div>
           </div>

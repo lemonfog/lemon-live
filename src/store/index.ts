@@ -44,12 +44,12 @@ export const sites: site[] = [
 
 export const volume = ref((() => {
   const v = localStorage.getItem('volume')
-  return v ? parseInt(v):70
+  return v ? parseInt(v) : 70
 })())
 
-export const setVolume = (isAdd: boolean) => { 
-  volume.value = isAdd ? Math.min(100, volume.value  + 5)
-    : Math.max(0,  volume.value  - 5)
+export const setVolume = (isAdd: boolean) => {
+  volume.value = isAdd ? Math.min(100, volume.value + 5)
+    : Math.max(0, volume.value - 5)
 }
 
 watch(volume, () => localStorage.setItem('volume', volume.value.toString()))
@@ -68,7 +68,7 @@ export function addFollow(room: LiveRoomItem) {
   const site = sites.find(i => i.id = room.siteId)!
   // if (site == undefined) return false
   room.siteId = site.id
-  site.follows[room.roomId] = { ...room, stream: undefined,ws:undefined }
+  site.follows[room.roomId] = { ...room, stream: undefined, ws: undefined }
   localStorage.setItem('follows-' + room.siteId, JSON.stringify(site.follows))
   return Reflect.has(site.follows, room.roomId)
 }
@@ -93,3 +93,24 @@ export async function getSubCategory(site: site, id: string) {
   }
   return null
 }
+
+
+export const dmSideOpen = ref((() => {
+  const s = localStorage.getItem('dm-side-open')
+  return s ? JSON.parse(s) : true
+})())
+export const dmCanvasOpen = ref((() => {
+  const s = localStorage.getItem('dm-canvas-open')
+  return s ? JSON.parse(s) : true
+})())
+
+
+export const toggleSideDmOpen = () => {
+  dmSideOpen.value = !dmSideOpen.value
+  localStorage.setItem('dm-side-open', JSON.stringify(dmSideOpen.value))
+}
+export const toggleCanvasDmOpen = () => {
+  dmCanvasOpen.value = !dmCanvasOpen.value
+  localStorage.setItem('dm-canvas-open', JSON.stringify(dmCanvasOpen.value))
+}
+
