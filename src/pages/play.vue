@@ -3,7 +3,7 @@ import danmakuIconOpen from '../assets/icons/danmaku_open.png'
 import danmakuIconClose from '../assets/icons/danmaku_close.png'
 import { sites, addFollow, removeFollow, volume, setVolume, toggleSideDmOpen, toggleCanvasDmOpen, dmSideOpen, dmCanvasOpen } from '../store'
 import { Flv, Hls } from 'lemon-mse';
-import {isMobile} from '../hooks/useMouseTouch'
+import { isMobile } from '../hooks/useMouseTouch'
 
 // definePage({
 //   path: '/play/:siteId/:id', 
@@ -33,7 +33,7 @@ type State = {
   showController: boolean,
   showInfo: boolean
   dm?: boolean
-  pictureInPicture:boolean
+  pictureInPicture: boolean
 }
 let clickTimer: number
 let noticeTimer: number
@@ -50,7 +50,7 @@ const state = reactive<State>({
   webscreen: false,
   showController: true,
   showInfo: true,
-  pictureInPicture:false
+  pictureInPicture: false
 })
 
 const route = useRoute()
@@ -121,9 +121,9 @@ let cvOb = new ResizeObserver((entries) => {
     canvas.value.height = cv.contentRect.height
     let a = canvas.value.width / 50 | 0
     a = Math.max(12, Math.min(a, 30))
-    dmk.value.setFont(a) 
+    dmk.value.setFont(a)
     dmk.value.setGap(a * 0.7)
-    dmk.value.setSpeed( Math.max(2,a/5))
+    dmk.value.setSpeed(Math.max(2, a / 5))
     dmk.value.resize()
   }, 100)
 })
@@ -170,7 +170,7 @@ let wsTimer: number
 const wsStart = () => {
   const url = room.value?.ws
   if (!url) return
-  if (ws || (!dmCanvasOpen.value&&!dmSideOpen.value)) return
+  if (ws || (!dmCanvasOpen.value && !dmSideOpen.value)) return
   ws = new WebSocket(url)
   ws.onopen = () => {
     // clearTimeout(wsTimer)
@@ -329,20 +329,29 @@ const remove = () => {
   clearTimeout(noticeTimer)
   wsClose()
   document.removeEventListener('keydown', hotkey)
-  video.value.removeEventListener('leavepictureinpicture',togglePictureInPicture)
-  if (type.value) {
+  if (type.value && !state.pictureInPicture) {
     // const type = types.value[state.type].toLowerCase() as 'flv' | 'hls'
     state[type.value]?.destroy()
   }
 }
 
-init() 
+init()
+const router = useRouter()
+let fullPath = route.fullPath
 onMounted(() => {
   video.value.volume = volume.value / 100
   video.value.addEventListener('canplay', () => { state.notice = null })
   if (!isMobile) player.value.addEventListener('mousemove', autoHide)
   document.addEventListener('keydown', hotkey)
-  video.value.addEventListener('leavepictureinpicture',togglePictureInPicture)
+  if (document.pictureInPictureElement) { 
+      document.exitPictureInPicture() 
+  } 
+  video.value.addEventListener('leavepictureinpicture', () => { 
+    if(!route.path.startsWith('/play/huya/')) return router.push(fullPath) 
+    if(route.fullPath==fullPath) return state.pictureInPicture = false
+    state[type.value]?.destroy() 
+  })
+  
 })
 onBeforeRouteUpdate((to) => {
   const { siteId, id } = to.params as any
@@ -365,6 +374,7 @@ watch(() => route.params, () => {
   wsClose()
   danmakuClean()
   init()
+  fullPath = route.fullPath
 })
 
 onBeforeUnmount(remove)
@@ -378,10 +388,10 @@ const tabClick = async (index: number) => {
 const videoClick = () => state.showController ? play() : autoHide()
 
 
-const  togglePictureInPicture=()=> {
+const togglePictureInPicture = () => {
   // if(!document.pictureInPictureEnabled) return
-  state.pictureInPicture = !state.pictureInPicture
-  state.pictureInPicture? video.value.requestPictureInPicture():document.exitPictureInPicture() 
+  state.pictureInPicture = !state.pictureInPicture 
+  document.pictureInPictureElement ? document.exitPictureInPicture() : video.value.requestPictureInPicture()
 }
 
 </script>
@@ -397,31 +407,34 @@ const  togglePictureInPicture=()=> {
       </div>
       <div ref="player" md:rounded-6px text-4 text-white @contextmenu.prevent="" bg-black cursor-default
         :class="{ 'cursor-none': !(state.showController), 'text-5': state.fullscreen, 'text-5 !pos-fixed left-0 right-0 top-0 bottom-0 z-10 ': state.webscreen }"
-        pos-relative w-full overflow-hidden select-none h-full @click="videoClick" @dblclick="fullscreen" >
+        pos-relative w-full overflow-hidden select-none h-full @click="videoClick" @dblclick="fullscreen">
         <div aspect-ratio-video>
           <video playsinline webkit-playsinline x5-video-player-type="h5" autoplay ref="video" w-full h-full
-            pos-absolute   @play="playEvent" @pause="pauseEvent" ></video>
+            pos-absolute @play="playEvent" @pause="pauseEvent"></video>
         </div>
         <div w-full h-full pos-absolute top-0 z-1 flex justify-center items-center text-6 v-show="state.notice">
           <span>{{ state.notice }}</span>
         </div>
-        <canvas  ref="canvas" width="0" height="0" pos-absolute top-0 w-full class="h-50%" z-1></canvas>
-        <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-10 flex items-center @click.stop=""
-          :class="{ 'py-3': state.fullscreen || state.webscreen }" bg-black bg-op-30>
+        <canvas ref="canvas" width="0" height="0" pos-absolute top-0 w-full class="h-50%" z-1></canvas>
+        <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-10 flex items-center
+          @click.stop="" :class="{ 'py-3': state.fullscreen || state.webscreen }" bg-black bg-op-30>
           <div @click="play" hover:text-amber :class="state.paused ? 'i-ri-play-large-fill' : 'i-ri-pause-large-fill'">
           </div>
           <!-- <div hover:text-amber @click="init" class="i-mdi-sync" style="transform:rotate(-45deg)"></div> -->
 
           <div hover:text-amber @click="follow" :class="state.follow ? 'i-ri-heart-fill' : 'i-ri-heart-line'"></div>
           <div hover:text-amber @click="init" class="i-ri-refresh-line"></div>
-          <img w-1.5em cursor-pointer @click="toggleCanvasDmOpen" :src="dmCanvasOpen ? danmakuIconOpen : danmakuIconClose" />
+          <img w-1.5em cursor-pointer @click="toggleCanvasDmOpen"
+            :src="dmCanvasOpen ? danmakuIconOpen : danmakuIconClose" />
 
           <div grow></div>
           <div v-if="types.length">
             <Select v-model:active="state.type" :list="types" />
             <Select v-model:active="state.qn" :list="qns" />
             <Select v-model:active="state.line" :list="lines" />
-            <div ml-2 v-if="!isMobile" hover:text-amber @click="togglePictureInPicture" :class="state.pictureInPicture?'i-ri-picture-in-picture-exit-line': 'i-ri-picture-in-picture-2-line' "></div>
+            <div ml-2 v-if="!isMobile" hover:text-amber @click="togglePictureInPicture"
+              :class="state.pictureInPicture ? 'i-ri-picture-in-picture-exit-line' : 'i-ri-picture-in-picture-2-line'">
+            </div>
           </div>
           <!-- <div hover:text-amber @click="webscreen" class="i-mdi-fit-to-screen"></div> -->
           <div hover:text-amber @click="fullscreen"
@@ -451,7 +464,8 @@ const  togglePictureInPicture=()=> {
       <Tabs :grow="true" @tabClick="tabClick" class="!h-[calc(100%-3.75rem)]">
         <Tab title="聊天" pos-relative>
           <div pos-absolute top-0 right-4 text-4 flex flex-col gap-3>
-            <img w-1.5em cursor-pointer @click="toggleSideDmOpen" :src="dmSideOpen ? danmakuIconOpen : danmakuIconClose" />
+            <img w-1.5em cursor-pointer @click="toggleSideDmOpen"
+              :src="dmSideOpen ? danmakuIconOpen : danmakuIconClose" />
             <div text-green-5 @click="danmakuClean" class="i-ri-delete-bin-3-line"></div>
             <div v-show="showScrollBtn" @click="dmBottomBtn" text-green-5 class="i-ri-arrow-down-circle-line"> </div>
           </div>
