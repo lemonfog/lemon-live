@@ -32,6 +32,7 @@ type State = {
   showController: boolean,
   showInfo: boolean
   dm?: boolean
+  pictureInPicture:boolean
 }
 let clickTimer: number
 let noticeTimer: number
@@ -47,12 +48,13 @@ const state = reactive<State>({
   fullscreen: false,
   webscreen: false,
   showController: true,
-  showInfo: true
+  showInfo: true,
+  pictureInPicture:false
 })
 
 const route = useRoute()
 const player = ref() as Ref<HTMLElement>
-const video = ref() as Ref<HTMLMediaElement>
+const video = ref() as Ref<HTMLVideoElement>
 const dm = ref() as Ref<HTMLElement>
 const room = shallowRef<LiveRoomItem>()
 const types = computed(() => room.value?.stream?.map(i => i.type.toUpperCase()) || [])
@@ -191,7 +193,7 @@ const wsStart = () => {
   }
   ws.onmessage = (e) => {
     dmCount++
-    if (dmCount == 1) return addDm('系统', '弹幕服务器连接正常')
+    if (dmCount == 1) return addDm('系统', '弹幕服务器连接成功')
     if (dmCount % 200 == 0) danmakuClean()
     const { sendNick, content } = JSON.parse(e.data).data
     addDm(sendNick, content)
@@ -326,18 +328,20 @@ const remove = () => {
   clearTimeout(noticeTimer)
   wsClose()
   document.removeEventListener('keydown', hotkey)
+  video.value.removeEventListener('leavepictureinpicture',togglePictureInPicture)
   if (type.value) {
     // const type = types.value[state.type].toLowerCase() as 'flv' | 'hls'
     state[type.value]?.destroy()
   }
 }
 
-init()
+init() 
 onMounted(() => {
   video.value.volume = volume.value / 100
   video.value.addEventListener('canplay', () => { state.notice = null })
   if (!isMobile) player.value.addEventListener('mousemove', autoHide)
   document.addEventListener('keydown', hotkey)
+  video.value.addEventListener('leavepictureinpicture',togglePictureInPicture)
 })
 onBeforeRouteUpdate((to) => {
   const { siteId, id } = to.params as any
@@ -372,6 +376,13 @@ const tabClick = async (index: number) => {
 
 const videoClick = () => state.showController ? play() : autoHide()
 
+
+const  togglePictureInPicture=()=> {
+  if(!document.pictureInPictureEnabled) return
+  state.pictureInPicture = !state.pictureInPicture
+  state.pictureInPicture? video.value.requestPictureInPicture():document.exitPictureInPicture() 
+}
+
 </script>
 
 <template>
@@ -388,7 +399,7 @@ const videoClick = () => state.showController ? play() : autoHide()
         pos-relative w-full overflow-hidden select-none h-full @click="videoClick" @dblclick="fullscreen" >
         <div aspect-ratio-video>
           <video playsinline webkit-playsinline x5-video-player-type="h5" autoplay ref="video" w-full h-full
-            pos-absolute   @play="playEvent" @pause="pauseEvent"></video>
+            pos-absolute   @play="playEvent" @pause="pauseEvent" ></video>
         </div>
         <div w-full h-full pos-absolute top-0 z-1 flex justify-center items-center text-6 v-show="state.notice">
           <span>{{ state.notice }}</span>
@@ -411,6 +422,7 @@ const videoClick = () => state.showController ? play() : autoHide()
             <Select v-model:active="state.line" :list="lines" />
           </template>
           <!-- <div hover:text-amber @click="webscreen" class="i-mdi-fit-to-screen"></div> -->
+          <div hover:text-amber @click="togglePictureInPicture" :class="state.pictureInPicture?'i-ri-picture-in-picture-exit-line': 'i-ri-picture-in-picture-2-line' "></div>
           <div hover:text-amber @click="fullscreen"
             :class="state.fullscreen ? 'i-ri-fullscreen-exit-fill' : 'i-ri-fullscreen-fill'">
           </div>
