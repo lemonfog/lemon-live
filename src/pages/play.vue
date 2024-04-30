@@ -385,16 +385,16 @@ const videoClick = () => state.showController ? play() : autoHide()
       </div>
       <div ref="player" md:rounded-6px text-4 text-white @contextmenu.prevent="" bg-black cursor-default
         :class="{ 'cursor-none': !(state.showController), 'text-5': state.fullscreen, 'text-5 !pos-fixed left-0 right-0 top-0 bottom-0 z-10 ': state.webscreen }"
-        pos-relative w-full overflow-hidden select-none h-full>
+        pos-relative w-full overflow-hidden select-none h-full @click="videoClick" @dblclick="fullscreen" >
         <div aspect-ratio-video>
           <video playsinline webkit-playsinline x5-video-player-type="h5" autoplay ref="video" w-full h-full
-            pos-absolute @click="videoClick" @dblclick="fullscreen" @play="playEvent" @pause="pauseEvent"></video>
+            pos-absolute   @play="playEvent" @pause="pauseEvent"></video>
         </div>
         <div w-full h-full pos-absolute top-0 z-1 flex justify-center items-center text-6 v-show="state.notice">
           <span>{{ state.notice }}</span>
         </div>
-        <canvas ref="canvas" width="0" height="0" pos-absolute top-0 w-full h-full z-1></canvas>
-        <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-1 flex items-center
+        <canvas  ref="canvas" width="0" height="0" pos-absolute top-0 w-full class="h-50%" z-1></canvas>
+        <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-10 flex items-center @click.stop=""
           :class="{ 'py-3': state.fullscreen || state.webscreen }" bg-black bg-op-30>
           <div @click="play" hover:text-amber :class="state.paused ? 'i-ri-play-large-fill' : 'i-ri-pause-large-fill'">
           </div>
