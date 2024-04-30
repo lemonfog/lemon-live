@@ -3,6 +3,7 @@ import danmakuIconOpen from '../assets/icons/danmaku_open.png'
 import danmakuIconClose from '../assets/icons/danmaku_close.png'
 import { sites, addFollow, removeFollow, volume, setVolume, toggleSideDmOpen, toggleCanvasDmOpen, dmSideOpen, dmCanvasOpen } from '../store'
 import { Flv, Hls } from 'lemon-mse';
+import {isMobile} from '../hooks/useMouseTouch'
 
 // definePage({
 //   path: '/play/:siteId/:id', 
@@ -378,7 +379,7 @@ const videoClick = () => state.showController ? play() : autoHide()
 
 
 const  togglePictureInPicture=()=> {
-  if(!document.pictureInPictureEnabled) return
+  // if(!document.pictureInPictureEnabled) return
   state.pictureInPicture = !state.pictureInPicture
   state.pictureInPicture? video.value.requestPictureInPicture():document.exitPictureInPicture() 
 }
@@ -416,13 +417,13 @@ const  togglePictureInPicture=()=> {
           <img w-1.5em cursor-pointer @click="toggleCanvasDmOpen" :src="dmCanvasOpen ? danmakuIconOpen : danmakuIconClose" />
 
           <div grow></div>
-          <template v-if="types.length">
+          <div v-if="types.length">
             <Select v-model:active="state.type" :list="types" />
             <Select v-model:active="state.qn" :list="qns" />
             <Select v-model:active="state.line" :list="lines" />
-          </template>
+            <div ml-2 v-if="!isMobile" hover:text-amber @click="togglePictureInPicture" :class="state.pictureInPicture?'i-ri-picture-in-picture-exit-line': 'i-ri-picture-in-picture-2-line' "></div>
+          </div>
           <!-- <div hover:text-amber @click="webscreen" class="i-mdi-fit-to-screen"></div> -->
-          <div hover:text-amber @click="togglePictureInPicture" :class="state.pictureInPicture?'i-ri-picture-in-picture-exit-line': 'i-ri-picture-in-picture-2-line' "></div>
           <div hover:text-amber @click="fullscreen"
             :class="state.fullscreen ? 'i-ri-fullscreen-exit-fill' : 'i-ri-fullscreen-fill'">
           </div>
