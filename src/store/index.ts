@@ -68,7 +68,7 @@ export function addFollow(room: LiveRoomItem) {
   const site = sites.find(i => i.id = room.siteId)!
   // if (site == undefined) return false
   room.siteId = site.id
-  site.follows[room.roomId] = { ...room, stream: undefined }
+  site.follows[room.roomId] = { ...room, stream: undefined,ws:undefined }
   localStorage.setItem('follows-' + room.siteId, JSON.stringify(site.follows))
   return Reflect.has(site.follows, room.roomId)
 }

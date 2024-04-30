@@ -23,7 +23,6 @@ type State = {
   qn: number
   line: number,
   paused?: boolean,
-  // volume: number,
   notice: string | null
   flv?: Flv,
   hls?: Hls,
@@ -32,25 +31,17 @@ type State = {
   webscreen: boolean,
   showController: boolean,
   showInfo: boolean
+  dm?: boolean
 }
 let clickTimer: number
 let noticeTimer: number
 let autoHideTimer: number
-
-const player = ref() as Ref<HTMLElement>
-const video = ref() as Ref<HTMLMediaElement>
-const dm = ref() as Ref<HTMLElement>
-
-const route = useRoute()
-
-const room = shallowRef<LiveRoomItem>()
 
 const state = reactive<State>({
   follow: false,
   type: 0,
   qn: 0,
   line: 0,
-  // volume: 0.4,
   notice: null,
   paused: true,
   fullscreen: false,
@@ -59,16 +50,16 @@ const state = reactive<State>({
   showInfo: true
 })
 
+const route = useRoute()
+const player = ref() as Ref<HTMLElement>
+const video = ref() as Ref<HTMLMediaElement>
+const dm = ref() as Ref<HTMLElement>
+const room = shallowRef<LiveRoomItem>()
 const types = computed(() => room.value?.stream?.map(i => i.type.toUpperCase()) || [])
-
 const qns = computed(() => types.value.length > 0 ? room.value!.stream[state.type].list.map(i => i.name) : [])
-
 const lines = computed(() => qns.value.length > 0 ? room.value!.stream[state.type].list[state.qn].lines.map(i => i.name) : [])
-
 const type = computed(() => types.value[state.type]?.toLowerCase() as 'flv')
-
 const url = computed(() => lines.value.length > 0 ? room.value!.stream[state.type].list[state.qn].lines[state.line].url : '')
-
 const follows = computed(() => sites.map(site => Object.values(site.follows) as LiveRoomItem[]).flat().sort(i => i.status ? -1 : 0))
 
 watch(url, () => {
@@ -104,15 +95,24 @@ watch(type, () => {
 })
 
 const danmakuIcon = ref(danmakuOpen)
+const videoDanmakuIcon = ref(danmakuOpen)
 const danmaku = () => {
   if (danmakuIcon.value == danmakuOpen) {
-    wsClose()
+    // wsClose()
     danmakuIcon.value = danmakuClose
     return
   }
   danmakuIcon.value = danmakuOpen
-  wsStart()
+  // wsStart()
 }
+const videoDmbtn = () => {
+  if (videoDanmakuIcon.value == danmakuOpen) {
+    videoDanmakuIcon.value = danmakuClose
+    return
+  }
+  videoDanmakuIcon.value = danmakuOpen
+}
+
 const danmakuClean = () => {
   dm.value.scrollTop = 0
   dm.value.innerHTML = ''
@@ -124,8 +124,29 @@ let dmCount = 0
 const showScrollBtn = ref(false)
 
 let alwaysBottom = true
+const canvas = ref()
+const dmk = useDanmaku(canvas)
+
+let cvTimer: number
+let cvOb = new ResizeObserver((entries) => {
+  clearTimeout(cvTimer)
+  const cv = entries[0] 
+  cvTimer = setTimeout(() => { 
+    if(!canvas.value||!dmk.value) return 
+    canvas.value.width = cv.contentRect.width
+    canvas.value.height = cv.contentRect.height 
+    let a =  canvas.value.width/50 | 0 
+    a = Math.max(12,Math.min(a,30))  
+    dmk.value.setFont( a)  
+    dmk.value.setSpeed(a/ 5|0)
+    dmk.value.setGap(a * 0.75)
+    dmk.value.resize()
+  }, 50)
+})
 
 const addDm = (nick: string, msg: string) => {
+  if (videoDanmakuIcon.value == danmakuOpen) dmk.value?.add(msg)
+  if (!state.showInfo || danmakuIcon.value == danmakuClose) return
   const n = document.createElement('div')
   n.innerHTML = `<span text-gray text-op-60> ${nick}：</span><span>${msg}</span>`
   dm.value.appendChild(n)
@@ -152,25 +173,40 @@ const dmBottomBtn = () => {
   dm.value.addEventListener('scroll', dmScroll)
 }
 let wsTimer: number
+// const heart = ()=>{
+//   clearTimeout(wsTimer)
+//   wsTimer = setTimeout(()=>{
+//     if(!ws) return 
+//     ws.send('ping')
+//     heart()
+//   },30000)
+// }
+
+
 const wsStart = () => {
   const url = room.value?.ws
   if (!url) return
   if (ws) return
   ws = new WebSocket(url)
   ws.onopen = () => {
+    // clearTimeout(wsTimer)
+    // heart()
+    clearInterval(wsTimer)
     addDm('系统', '开始连接弹幕服务器')
     dmOb.observe(dm.value)
+    cvOb.observe(canvas.value)
     dm.value.addEventListener('scroll', dmScroll)
     danmakuIcon.value = danmakuOpen
-    ws!.send(JSON.stringify({ command: "subscribeNotice", data: ["getMessageNotice"], reqId: Date.now().toString() }))
+    ws?.send(JSON.stringify({ command: "subscribeNotice", data: ["getMessageNotice"], reqId: Date.now().toString() }))
     wsTimer = setInterval(() => {
+      // if (!ws) return 
       ws!.send('ping')
-    }, 60000)
+    }, 30000)
   }
   ws.onerror = () => {
+    clearInterval(wsTimer)
     danmakuIcon.value = danmakuClose
     addDm('系统', '弹幕服务器连接失败')
-    clearInterval(wsTimer)
   }
   ws.onmessage = (e) => {
     dmCount++
@@ -194,6 +230,11 @@ const wsClose = () => {
   dmOb.unobserve(dm.value)
 }
 watch(room, () => wsStart())
+watchEffect(() => {
+  if (danmakuIcon.value == danmakuClose && videoDanmakuIcon.value == danmakuClose) wsClose()
+  if (!ws) wsStart()
+})
+
 
 const init = () => {
   const { site, id } = route.meta
@@ -202,18 +243,19 @@ const init = () => {
     room.value = _room
     state.follow = true
   }
+  clearInterval(wsTimer)
   clearTimeout(noticeTimer)
   state.notice = '加载中...'
   nextTick(() => addDm('系统', '开始获取直播间信息'))
   useSiteFetch(site.id, 'getRoomDetail', { id }).then((data) => {
     room.value = data
-    if(state.follow) addFollow(data)
-    nextTick(() => addDm('系统', '获取直播间信息成功'))
+    if (state.follow) addFollow(data)
+    nextTick(() => addDm('系统', '直播间信息获取成功'))
     if (!data.status) return state.notice = '未开播！'
 
   }, (msg) => {
     state.notice = msg
-    nextTick(() => addDm('系统', '获取直播间信息失败'))
+    nextTick(() => addDm('系统', '直播间信息获取失败'))
   }).finally(() => clearTimeout(noticeTimer))
 
 
@@ -307,7 +349,7 @@ const remove = () => {
 }
 
 init()
-onMounted(() => {
+onMounted(() => { 
   video.value.volume = volume.value / 100
   video.value.addEventListener('canplay', () => { state.notice = null })
   if (!isMobile) player.value.addEventListener('mousemove', autoHide)
@@ -367,6 +409,7 @@ const videoClick = () => state.showController ? play() : autoHide()
         <div w-full h-full pos-absolute top-0 z-1 flex justify-center items-center text-6 v-show="state.notice">
           <span>{{ state.notice }}</span>
         </div>
+        <canvas ref="canvas" width="0" height="0" pos-absolute top-0 w-full h-full z-1 ></canvas>
         <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-1 flex items-center
           :class="{ 'py-3': state.fullscreen || state.webscreen }" bg-black bg-op-30>
           <div @click="play" hover:text-amber :class="state.paused ? 'i-ri-play-large-fill' : 'i-ri-pause-large-fill'">
@@ -375,6 +418,7 @@ const videoClick = () => state.showController ? play() : autoHide()
 
           <div hover:text-amber @click="follow" :class="state.follow ? 'i-ri-heart-fill' : 'i-ri-heart-line'"></div>
           <div hover:text-amber @click="init" class="i-ri-refresh-line"></div>
+          <img w-1.5em cursor-pointer @click="videoDmbtn" :src="videoDanmakuIcon" />
 
           <div grow></div>
           <template v-if="types.length">
