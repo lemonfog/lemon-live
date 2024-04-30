@@ -41,7 +41,7 @@ export class Danmaku {
   setFont(size: number, family?: string) {
     this.ctx.textBaseline = 'top'
     this.fontSize = size
-    this.ctx.font = `bold ${size}px ${family || 'STheiti, SimHei'}`
+    this.ctx.font = `${size}px ${family || 'STheiti, SimHei'}`
   }
   setGap(gap:number){
     this.gap = gap
