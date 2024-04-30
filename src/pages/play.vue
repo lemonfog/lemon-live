@@ -119,7 +119,8 @@ let cvOb = new ResizeObserver((entries) => {
     let a = canvas.value.width / 50 | 0
     a = Math.max(12, Math.min(a, 30))
     dmk.value.setFont(a) 
-    dmk.value.setGap(a * 0.75)
+    dmk.value.setGap(a * 0.7)
+    dmk.value.setSpeed( Math.max(2,a/5))
     dmk.value.resize()
   }, 100)
 })
@@ -199,6 +200,7 @@ const wsStart = () => {
 }
 const wsClose = () => {
   clearInterval(wsTimer)
+
   if (!ws) return
   ws.close()
   ws = null
@@ -209,6 +211,7 @@ const wsClose = () => {
     // dmSideOpen.value = false
   }
   dmOb.unobserve(dm.value)
+  cvOb.unobserve(canvas.value)
 }
 watch(room, () => wsStart())
 watchEffect(() => {
