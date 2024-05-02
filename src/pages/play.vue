@@ -99,6 +99,7 @@ watch(type, () => {
 
 
 const danmakuClean = () => {
+
   dm.value.scrollTop = 0
   dm.value.innerHTML = ''
   showScrollBtn.value = false
@@ -120,7 +121,7 @@ let cvOb = new ResizeObserver((entries) => {
     canvas.value.width = cv.contentRect.width
     canvas.value.height = cv.contentRect.height
     let a = canvas.value.width / 50 | 0
-    a = Math.max(12, Math.min(a, 30))
+    a = Math.max(13, Math.min(a, 32))
     dmk.value.setFont(a)
     dmk.value.setGap(a * 0.7)
     dmk.value.setSpeed(Math.max(2, a / 5))
@@ -157,61 +158,94 @@ const dmBottomBtn = () => {
   dm.value.addEventListener('scroll', dmScroll)
 }
 let wsTimer: number
-// const heart = ()=>{
-//   clearTimeout(wsTimer)
-//   wsTimer = setTimeout(()=>{
-//     if(!ws) return 
-//     ws.send('ping')
-//     heart()
-//   },30000)
-// }
-
 
 const wsStart = () => {
-  const url = room.value?.ws
-  if (!url) return
-  if (ws || (!dmCanvasOpen.value && !dmSideOpen.value)) return
-  ws = new WebSocket(url)
-  ws.onopen = () => {
-    // clearTimeout(wsTimer)
-    // heart()
-    clearInterval(wsTimer)
-    addDm('系统', '开始连接弹幕服务器')
-    dmOb.observe(dm.value)
-    cvOb.observe(canvas.value)
-    dm.value.addEventListener('scroll', dmScroll)
-    ws?.send(JSON.stringify({ command: "subscribeNotice", data: ["getMessageNotice"], reqId: Date.now().toString() }))
-    wsTimer = setInterval(() => {
-      // if (!ws) return 
-      ws!.send('ping')
-    }, 30000)
+  if (!room.value || ws || (!dmCanvasOpen.value && !dmSideOpen.value)) return
+  if (room.value.siteId == 'huya') {
+    const url = room.value?.ws
+    if (!url) return
+    ws = new WebSocket(url)
+    ws.onopen = () => {
+      clearInterval(wsTimer)
+      addDm('系统', '开始连接弹幕服务器')
+      dmOb.observe(dm.value)
+      cvOb.observe(canvas.value)
+      dm.value.addEventListener('scroll', dmScroll)
+      ws?.send(JSON.stringify({ command: "subscribeNotice", data: ["getMessageNotice"], reqId: Date.now().toString() }))
+      wsTimer = setInterval(() => {
+        // if (!ws) return 
+        ws!.send('ping')
+      }, 45000)
+    }
+    ws.onmessage = (e) => {
+      dmCount++
+      if (dmCount == 1) return addDm('系统', '弹幕服务器连接成功')
+      const { sendNick, content } = JSON.parse(e.data).data
+      addDm(sendNick, content)
+      if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
+    }
+    ws.onerror = () => {
+      clearInterval(wsTimer)
+      addDm('系统', '弹幕服务器连接失败')
+    }
   }
-  ws.onerror = () => {
-    clearInterval(wsTimer)
-    // dmCanvasOpen.value = false
-    // dmSideOpen.value = false
-    addDm('系统', '弹幕服务器连接失败')
+  else if (room.value.siteId == 'douyu') {
+    ws = new WebSocket('wss://danmuproxy.douyu.com:8506')
+    ws.onopen = () => {
+      clearInterval(wsTimer)
+      addDm('系统', '开始连接弹幕服务器')
+      dmOb.observe(dm.value)
+      cvOb.observe(canvas.value)
+      dm.value.addEventListener('scroll', dmScroll)
+      ws!.send(douyuEncode(`type@=loginreq/roomid@=${room.value?.roomId}`))
+      ws!.send(douyuEncode(`type@=joingroup/rid@=${room.value?.roomId}/gid@=-9999`))
+      wsTimer = setInterval(() => {
+        ws!.send(douyuEncode(`type@=mrkl/`))
+      }, 45000)
+    }
+    ws.onmessage = async ({ data }) => {
+      dmCount++
+      if (dmCount == 1) addDm('系统', '弹幕服务器连接成功')
+      const str = await data.text()
+      const arr = str.split(/type@=chatmsg\//)
+      arr.forEach((i: string) => {
+        const m = i.match(/nn@=(.*)\/txt@=(.*)\/cid/)
+        if (m == null) return
+        addDm(m[1], m[2])
+        if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
+      })
+    }
+    ws.onerror = () => {
+      clearInterval(wsTimer)
+      addDm('系统', '弹幕服务器连接失败')
+    } 
+
   }
-  ws.onmessage = (e) => {
-    dmCount++
-    if (dmCount == 1) return addDm('系统', '弹幕服务器连接成功')
-    if (dmCount % 200 == 0) danmakuClean()
-    const { sendNick, content } = JSON.parse(e.data).data
-    addDm(sendNick, content)
-    if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
-  }
+
 }
+
+const textEncoder = new TextEncoder()
+function douyuEncode(msg: string) {
+  let data = textEncoder.encode(msg)
+  const len = 9 + data.byteLength
+  const header = [len, 0, 0, 0.1, len, 0, 0, 0, 177, 2, 0, 0]
+  data = textEncoder.encode(msg + '\0')
+  const result = new Uint8Array(12 + data.byteLength)
+  result.set(header)
+  result.set(data, 12)
+  return result.buffer
+}
+
 const wsClose = () => {
   clearInterval(wsTimer)
-
+  
   if (!ws) return
-  ws.close()
+  ws.onmessage = null   
+  siteID=='douyu'? ws.send(douyuEncode('type@=logout')):ws.close()
   ws = null
   dmCount = 0
   if (dm.value) {
     addDm('系统', '弹幕服务器断开连接')
-    // dmCanvasOpen.value = false
-    // dmSideOpen.value = false
   }
   dmOb.unobserve(dm.value)
   cvOb.unobserve(canvas.value)
@@ -343,16 +377,17 @@ onMounted(() => {
   video.value.addEventListener('canplay', () => { state.notice = null })
   if (!isMobile) player.value.addEventListener('mousemove', autoHide)
   document.addEventListener('keydown', hotkey)
-  if (document.pictureInPictureElement) { 
-      document.exitPictureInPicture() 
-  } 
-  video.value.addEventListener('leavepictureinpicture', () => { 
-    if(!route.path.startsWith('/play/huya/')) return router.push(fullPath) 
-    if(route.fullPath==fullPath) return state.pictureInPicture = false
-    state[type.value]?.destroy() 
+  if (document.pictureInPictureElement) {
+    document.exitPictureInPicture()
+  }
+  video.value.addEventListener('leavepictureinpicture', () => {
+    if (!route.path.startsWith('/play')) return router.push(fullPath)
+    if (route.fullPath == fullPath) return state.pictureInPicture = false
+    state[type.value]?.destroy()
   })
-  
+
 })
+let siteID = route.meta.site.id
 onBeforeRouteUpdate((to) => {
   const { siteId, id } = to.params as any
   const site = sites.find(i => i.id == siteId)
@@ -371,10 +406,14 @@ onBeforeRouteUpdate((to) => {
   return true
 })
 watch(() => route.params, () => {
+  
   wsClose()
   danmakuClean()
-  init()
+  dmk.value?.destory()
+  siteID = route.meta.site.id
   fullPath = route.fullPath
+  init()
+
 })
 
 onBeforeUnmount(remove)
@@ -390,7 +429,7 @@ const videoClick = () => state.showController ? play() : autoHide()
 
 const togglePictureInPicture = () => {
   // if(!document.pictureInPictureEnabled) return
-  state.pictureInPicture = !state.pictureInPicture 
+  state.pictureInPicture = !state.pictureInPicture
   document.pictureInPictureElement ? document.exitPictureInPicture() : video.value.requestPictureInPicture()
 }
 
