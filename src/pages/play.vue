@@ -101,6 +101,7 @@ watch(type, () => {
 const danmakuClean = () => {
 
   dm.value.scrollTop = 0
+  scrolltop = 0
   dm.value.innerHTML = ''
   showScrollBtn.value = false
   dmOb.observe(dm.value)
@@ -130,6 +131,10 @@ let cvOb = new ResizeObserver((entries) => {
 })
 
 const addDm = (nick: string, msg: string) => {
+  if(dmCount%100==0){
+    dm.value.innerHTML = ''
+    scrolltop = 0
+  } 
   if (dmCanvasOpen.value) dmk.value?.add(msg)
   if (!state.showInfo || !dmSideOpen.value) return
   const n = document.createElement('div')
@@ -145,9 +150,10 @@ const dmOb = new ResizeObserver(() => {
   }
   showScrollBtn.value = false
 })
-
+let scrolltop = 0
 const dmScroll = () => {
-  if (dm.value.scrollTop == (dm.value.scrollHeight - dm.value.clientHeight)) return
+  if (dm.value.scrollTop >= scrolltop) return scrolltop = dm.value.scrollTop
+  scrolltop = dm.value.scrollTop
   alwaysBottom = false
   dmOb.unobserve(dm.value)
   dm.value.removeEventListener('scroll', dmScroll)
@@ -155,7 +161,7 @@ const dmScroll = () => {
 const dmBottomBtn = () => {
   alwaysBottom = true
   dm.value.scrollTop = dm.value.scrollHeight
-  dm.value.addEventListener('scroll', dmScroll)
+  dm.value.addEventListener('scroll', dmScroll, { passive: false })
 }
 let wsTimer: number
 
@@ -218,7 +224,7 @@ const wsStart = () => {
     ws.onerror = () => {
       clearInterval(wsTimer)
       addDm('系统', '弹幕服务器连接失败')
-    } 
+    }
 
   }
 
@@ -238,10 +244,10 @@ function douyuEncode(msg: string) {
 
 const wsClose = () => {
   clearInterval(wsTimer)
-  
+
   if (!ws) return
-  ws.onmessage = null   
-  siteID=='douyu'? ws.send(douyuEncode('type@=logout')):ws.close()
+  ws.onmessage = null
+  siteID == 'douyu' ? ws.send(douyuEncode('type@=logout')) : ws.close()
   ws = null
   dmCount = 0
   if (dm.value) {
@@ -406,7 +412,7 @@ onBeforeRouteUpdate((to) => {
   return true
 })
 watch(() => route.params, () => {
-  
+
   wsClose()
   danmakuClean()
   dmk.value?.destory()

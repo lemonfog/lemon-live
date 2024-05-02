@@ -22,6 +22,10 @@ const navs = [
   }
 ]
 
+onMounted(()=>{
+  document.querySelector('main')!.style.height =`calc(${window.innerHeight}px - 3.5rem)`
+})
+
 </script>
 
 <template>
@@ -33,7 +37,7 @@ const navs = [
     </router-link>
   </div>
 
-  <main  class="h-[calc(100vh-3.5rem)] " md:h-100vh text-xs md:text-sm xl:text-base pt-2 box-border md:ml-17.5 >
+  <main md:h-100vh text-xs md:text-sm xl:text-base pt-2 box-border md:ml-17.5 >
     <div h-full class="scrolly" md:px-3>
       <router-view v-slot="{ Component }">
         <keep-alive :exclude="['play']">
@@ -43,4 +47,4 @@ const navs = [
     </div>
   </main>
 
-</template>
+</template> 
