@@ -37,7 +37,7 @@ onMounted(()=>{
     </router-link>
   </div>
 
-  <main md:h-100vh text-xs md:text-sm xl:text-base pt-2 box-border md:ml-17.5 >
+  <main class="md:!h-100vh"  text-xs md:text-sm xl:text-base pt-2 box-border md:ml-17.5 >
     <div h-full class="scrolly" md:px-3>
       <router-view v-slot="{ Component }">
         <keep-alive :exclude="['play']">
