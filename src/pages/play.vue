@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import danmakuIconOpen from '../assets/icons/danmaku_open.png'
 import danmakuIconClose from '../assets/icons/danmaku_close.png'
-import { sites, addFollow, removeFollow, volume, setVolume, toggleSideDmOpen, toggleCanvasDmOpen, dmSideOpen, dmCanvasOpen } from '../store'
+import { sites, addFollow, removeFollow, volume, setVolume, dmSetting,colors,blockRegex } from '../store'
 import { Flv, Hls } from 'lemon-mse';
 import { isMobile } from '../hooks/useMouseTouch'
 
@@ -112,33 +112,47 @@ const showScrollBtn = ref(false)
 
 let alwaysBottom = true
 const canvas = ref()
-const dmk = useDanmaku(canvas)
-let cvTimer: number
-let cvOb = new ResizeObserver((entries) => {
-  clearTimeout(cvTimer)
-  const cv = entries[0]
-  cvTimer = setTimeout(() => {
-    if (!canvas.value || !dmk.value) return
-    canvas.value.width = cv.contentRect.width
-    canvas.value.height = cv.contentRect.height
-    let a = canvas.value.width / 50 | 0
-    a = Math.max(13, Math.min(a, 32))
-    dmk.value.setFont(a)
-    dmk.value.setGap(a * 0.7)
-    dmk.value.setSpeed(Math.max(2, a / 5))
-    dmk.value.resize()
-  }, 100)
-})
+const dmk = useDanmaku( canvas,{
+  gap:dmSetting.canvasGap,
+  rows:dmSetting.canvasRows,
+  speed:dmSetting.canvasSpeed,
+  opacity:dmSetting.canvasOpacity,
+  colors: dmSetting.canvasColorOpen?dmSetting.colors:['#ffffff']   })
+// let cvTimer: number
+// let cvOb = new ResizeObserver((entries) => {
+//   clearTimeout(cvTimer)
+//   const cv = entries[0]
+//   cvTimer = setTimeout(() => {
+//     if (!canvas.value || !dmk.value) return
+//     canvas.value.width = cv.contentRect.width
+//     canvas.value.height = cv.contentRect.height
+//     let a = canvas.value.width / 50 | 0
+//     a = Math.max(13, Math.min(a, 32))
+//     dmk.value.setFont(a)
+//     dmk.value.setGap(a * 0.7)
+//     dmk.value.setSpeed(Math.max(2, a / 5))
+//     dmk.value.resize()
+//   }, 100)
+// })
 
+ 
 const addDm = (nick: string, msg: string) => {
-  if(dmCount%100==0){
+  
+  if(dmSetting.blockOpen && blockRegex.value.length && blockRegex.value.some(i=>i.test(msg))) return 
+  if ( dmCount %(dmSetting.sideClean || 100) == 0) {
     dm.value.innerHTML = ''
     scrolltop = 0
-  } 
-  if (dmCanvasOpen.value) dmk.value?.add(msg)
-  if (!state.showInfo || !dmSideOpen.value) return
+  }
+
+  if (dmSetting.canvasOpen) dmk.value?.add(msg)
+  if (!state.showInfo || !dmSetting.sideOpen) return
   const n = document.createElement('div')
-  n.innerHTML = `<span text-gray text-op-60> ${nick}：</span><span>${msg}</span>`
+  const  {sideColorOpen,sideFontsize,sideGap,colors} = dmSetting 
+  n.style.margin = `${sideGap}px 0`
+  n.style.fontSize = `${sideFontsize}px`
+  if(sideColorOpen) n.style.color = colors[Math.floor(Math.random() * colors.length) ]
+  
+  n.innerHTML = `<span style="opacity:.5"> ${nick}：</span><span>${msg}</span>`
   dm.value.appendChild(n)
 }
 
@@ -166,7 +180,7 @@ const dmBottomBtn = () => {
 let wsTimer: number
 
 const wsStart = () => {
-  if (!room.value || ws || (!dmCanvasOpen.value && !dmSideOpen.value)) return
+  if (!room.value || ws || (!dmSetting.canvasOpen && !dmSetting.sideOpen)) return
   if (room.value.siteId == 'huya') {
     const url = room.value?.ws
     if (!url) return
@@ -174,12 +188,10 @@ const wsStart = () => {
     ws.onopen = () => {
       clearInterval(wsTimer)
       addDm('系统', '开始连接弹幕服务器')
-      dmOb.observe(dm.value)
-      cvOb.observe(canvas.value)
+      dmOb.observe(dm.value) 
       dm.value.addEventListener('scroll', dmScroll)
       ws?.send(JSON.stringify({ command: "subscribeNotice", data: ["getMessageNotice"], reqId: Date.now().toString() }))
-      wsTimer = setInterval(() => {
-        // if (!ws) return 
+      wsTimer = setInterval(() => { 
         ws!.send('ping')
       }, 45000)
     }
@@ -200,8 +212,7 @@ const wsStart = () => {
     ws.onopen = () => {
       clearInterval(wsTimer)
       addDm('系统', '开始连接弹幕服务器')
-      dmOb.observe(dm.value)
-      cvOb.observe(canvas.value)
+      dmOb.observe(dm.value) 
       dm.value.addEventListener('scroll', dmScroll)
       ws!.send(douyuEncode(`type@=loginreq/roomid@=${room.value?.roomId}`))
       ws!.send(douyuEncode(`type@=joingroup/rid@=${room.value?.roomId}/gid@=-9999`))
@@ -254,11 +265,11 @@ const wsClose = () => {
     addDm('系统', '弹幕服务器断开连接')
   }
   dmOb.unobserve(dm.value)
-  cvOb.unobserve(canvas.value)
+  // cvOb.unobserve(canvas.value)
 }
 watch(room, () => wsStart())
 watchEffect(() => {
-  if (!dmSideOpen.value && !dmCanvasOpen.value) wsClose()
+  if (!dmSetting.sideOpen && !dmSetting.canvasOpen) wsClose()
   if (!ws) wsStart()
 })
 
@@ -381,8 +392,11 @@ let fullPath = route.fullPath
 onMounted(() => {
   video.value.volume = volume.value / 100
   video.value.addEventListener('canplay', () => { state.notice = null })
-  if (!isMobile) player.value.addEventListener('mousemove', autoHide)
-  document.addEventListener('keydown', hotkey)
+  if (!isMobile){
+     player.value.addEventListener('mousemove', autoHide)
+      document.addEventListener('keydown', hotkey)
+  }
+ 
   if (document.pictureInPictureElement) {
     document.exitPictureInPicture()
   }
@@ -439,6 +453,28 @@ const togglePictureInPicture = () => {
   document.pictureInPictureElement ? document.exitPictureInPicture() : video.value.requestPictureInPicture()
 }
 
+
+const toggleColor = (e:Event)=>{
+    const color = (e.target as HTMLElement).dataset.color
+    if(!color) return
+    const index = dmSetting.colors.findIndex((i)=>i==color)
+    if(index==-1) return dmSetting.colors.push(color)
+    if(dmSetting.colors.length==1) return
+    dmSetting.colors.splice(index,1)
+ }
+
+
+watch(()=>dmSetting.colors,()=>dmk.value?.setColors(dmSetting.colors) ) 
+watch(()=>dmSetting.canvasSpeed,()=>dmk.value?.setSpeed(dmSetting.canvasSpeed))
+watch(()=> dmSetting.canvasOpacity,()=> dmk.value?.setOpacity(dmSetting.canvasOpacity)) 
+watch(()=>dmSetting.canvasColorOpen,()=>dmk.value?.setColors(dmSetting.canvasColorOpen?dmSetting.colors:['#ffffff']  ))
+watchEffect(()=>{ 
+  dmk.value?.setGap(dmSetting.canvasGap)  
+  dmk.value?.setFont(dmSetting.canvasFontsize)
+  dmk.value?.setRows(dmSetting.canvasRows)
+  dmk.value?.resize()
+})
+
 </script>
 
 <template>
@@ -460,7 +496,7 @@ const togglePictureInPicture = () => {
         <div w-full h-full pos-absolute top-0 z-1 flex justify-center items-center text-6 v-show="state.notice">
           <span>{{ state.notice }}</span>
         </div>
-        <canvas ref="canvas" width="0" height="0" pos-absolute top-0 w-full class="h-50%" z-1></canvas>
+        <canvas ref="canvas" pos-absolute top-0 width="0" height="0" w-full h-full z-1></canvas>
         <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-10 flex items-center
           @click.stop="" :class="{ 'py-3': state.fullscreen || state.webscreen }" bg-black bg-op-30>
           <div @click="play" hover:text-amber :class="state.paused ? 'i-ri-play-large-fill' : 'i-ri-pause-large-fill'">
@@ -469,8 +505,8 @@ const togglePictureInPicture = () => {
 
           <div hover:text-amber @click="follow" :class="state.follow ? 'i-ri-heart-fill' : 'i-ri-heart-line'"></div>
           <div hover:text-amber @click="init" class="i-ri-refresh-line"></div>
-          <img w-1.5em cursor-pointer @click="toggleCanvasDmOpen"
-            :src="dmCanvasOpen ? danmakuIconOpen : danmakuIconClose" />
+          <img w-1.5em cursor-pointer @click="() => dmSetting.canvasOpen = !dmSetting.canvasOpen"
+            :src="dmSetting.canvasOpen ? danmakuIconOpen : danmakuIconClose" />
 
           <div grow></div>
           <div v-if="types.length">
@@ -509,25 +545,88 @@ const togglePictureInPicture = () => {
       <Tabs :grow="true" @tabClick="tabClick" class="!h-[calc(100%-3.75rem)]">
         <Tab title="聊天" pos-relative>
           <div pos-absolute top-0 right-4 text-4 flex flex-col gap-3>
-            <img w-1.5em cursor-pointer @click="toggleSideDmOpen"
-              :src="dmSideOpen ? danmakuIconOpen : danmakuIconClose" />
+            <img w-1.5em cursor-pointer @click="() => dmSetting.sideOpen = !dmSetting.sideOpen"
+              :src="dmSetting.sideOpen ? danmakuIconOpen : danmakuIconClose" />
             <div text-green-5 @click="danmakuClean" class="i-ri-delete-bin-3-line"></div>
             <div v-show="showScrollBtn" @click="dmBottomBtn" text-green-5 class="i-ri-arrow-down-circle-line"> </div>
           </div>
           <div ref="dm" h-full pl-2 box-border class="scrolly">
           </div>
         </Tab>
-        <Tab title="关注">
-          <router-link v-for="i in follows" :key="`${i.siteId}/${i.roomId}`" :to="`/play/${i.siteId}/${i.roomId}`" flex
-            items-center gap-2 py-2>
+        <Tab title="关注" box-border px-4>
+          <router-link v-for="i in follows" :class="{ 'text-amber': room?.siteId == i.siteId && room?.roomId == i.roomId }"
+            :key="`${i.siteId}/${i.roomId}`" :to="`/play/${i.siteId}/${i.roomId}`" flex items-center gap-2 py-2>
             <img w-5 h-5 rounded-5 v-lazy="i.avatar" alt="">
             <div>{{ i.nickname }} </div>
             <div w-3 h-3 rounded-3 :class="[i.status ? 'bg-green' : 'bg-red']"></div>
             <div>{{ i.status ? '直播中' : '未开播' }}</div>
           </router-link>
         </Tab>
-        <Tab title="设置">
-          <div>设置</div>
+        <Tab title="设置" px-2>
+          <!-- <div w-full p-2 box-border> -->
+            <div p-3 bg-sm>弹幕</div>
+            <div flex flex-col b b-solid b-gray-6 rounded-2 px-2>
+              <div flex justify-between items-center mx-2 py-2>
+                <div>文字大小</div>
+                <Stepper v-model:value="dmSetting.canvasFontsize" :max="80" :min="8" :step="1"></Stepper>
+              </div>
+              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+                <div>上下间隔</div>
+                <Stepper v-model:value="dmSetting.canvasGap" :max="80" :min="1" :step="1"></Stepper>
+              </div>
+              <div flex justify-between items-center mx-2 py-2>
+                <div>最大行数</div>
+                <Stepper v-model:value="dmSetting.canvasRows" :max="50" :min="1" :step="1"></Stepper>
+              </div>
+              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+                <div>弹幕速度</div>
+                <Stepper v-model:value="dmSetting.canvasSpeed" :max="32" :min="0.5" :step="0.5"></Stepper>
+              </div>
+              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+                <div>弹幕透明</div>
+                <Stepper v-model:value="dmSetting.canvasOpacity" :max="100" :min="10" :step="10"></Stepper>
+              </div>
+              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+                <div>彩色弹幕</div>
+                <Switch v-model:value="dmSetting.canvasColorOpen"></Switch>
+              </div>
+
+            </div>
+            <div p-3 bg-sm>聊天</div>
+            <div flex flex-col b b-solid b-gray-6 rounded-2 px-2>
+              <div flex justify-between items-center mx-2 py-2>
+                <div>文字大小</div>
+                <Stepper v-model:value="dmSetting.sideFontsize" :max="80" :min="8" :step="1"></Stepper>
+              </div>
+              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+                <div>上下间隔</div>
+                <Stepper v-model:value="dmSetting.sideGap" :max="80" :min="0" :step="1"></Stepper>
+              </div>
+              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+                <div>自动清屏</div>
+                <Stepper v-model:value="dmSetting.sideClean" :max="500" :min="10" :step="10"></Stepper>
+              </div>
+              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+                <div>彩色消息</div>
+                <Switch v-model:value="dmSetting.sideColorOpen"></Switch>
+              </div>
+            </div>
+
+            <div p-3 bg-sm>颜色</div>
+            <div flex flex-wrap shadow blur bg-dark p-2 box-border b b-solid b-gray-7
+              style="box-shadow:0 6px 15px 0 rgba(0, 0, 0, .5) ;" rounded>
+              <div v-for="color in colors" @click="toggleColor">
+                <div class="w-4 h-4 rounded-2 m-2 shadow" box-border :data-color="color" cursor-pointer
+                  :style="`background:${color};${dmSetting.colors.includes(color) ? 'box-shadow:0 0 0px 2px white' : ''}`">
+                </div>
+              </div>
+            </div>
+            <div p-3 bg-sm flex justify-between items-center>屏蔽
+              <Switch v-model:value="dmSetting.blockOpen" />
+            </div>
+            <textarea outline-none w-full v-model.trim="dmSetting.blockWords" text-white b b-solid b-gray-7 p-2 box-border rows="5"
+              bg-dark shadow rounded-1 placeholder="以空格分隔"></textarea>
+          <!-- </div> -->
         </Tab>
       </Tabs>
       <!-- <div grid grid-cols-3 text-center gap-2> -->

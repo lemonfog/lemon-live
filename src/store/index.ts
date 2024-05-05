@@ -42,17 +42,14 @@ export const sites: site[] = [
   },
 ]
 
-export const volume = ref((() => {
-  const v = localStorage.getItem('volume')
-  return v ? parseInt(v) : 70
-})())
+export const volume = ref(getItem('volume', 70))
 
 export const setVolume = (isAdd: boolean) => {
   volume.value = isAdd ? Math.min(100, volume.value + 5)
     : Math.max(0, volume.value - 5)
 }
 
-watch(volume, () => localStorage.setItem('volume', volume.value.toString()))
+watch(volume, () => setItem('volume', volume.value))
 
 const sitesMap = {} as { [x in siteId]: number }
 
@@ -95,22 +92,67 @@ export async function getSubCategory(site: site, id: string) {
 }
 
 
-export const dmSideOpen = ref((() => {
-  const s = localStorage.getItem('dm-side-open')
-  return s ? JSON.parse(s) : true
-})())
-export const dmCanvasOpen = ref((() => {
-  const s = localStorage.getItem('dm-canvas-open')
-  return s ? JSON.parse(s) : true
-})())
+export const dmSetting = reactive(getItem('dm-settings', {
+  canvasOpen: true as boolean,
+  canvasFontsize: 18,
+  canvasGap: 10,
+  canvasOpacity: 100,
+  canvasRows: 10,
+  canvasSpeed: 2.5,
+  canvasColorOpen: false as boolean,
+  sideOpen: true as boolean,
+  sideFontsize: 14,
+  sideGap: 2,
+  sideColorOpen: false as boolean,
+  sideClean: 100,
+  colors: ['#ffffff','#7e22ce','1d4ed8','#be185d','#fcd34d'],
+  blockOpen: false,
+  blockWords: ''
+}))
 
+watchEffect(() => {
+  setItem('dm-settings', dmSetting)
+})
 
-export const toggleSideDmOpen = () => {
-  dmSideOpen.value = !dmSideOpen.value
-  localStorage.setItem('dm-side-open', JSON.stringify(dmSideOpen.value))
+export function getItem<T>(key: string, initValue: T): T {
+  const v = localStorage.getItem(key)
+  return v ? JSON.parse(v) : initValue
 }
-export const toggleCanvasDmOpen = () => {
-  dmCanvasOpen.value = !dmCanvasOpen.value
-  localStorage.setItem('dm-canvas-open', JSON.stringify(dmCanvasOpen.value))
+
+export function setItem(key: string, data: any) {
+  localStorage.setItem(key, JSON.stringify(data))
 }
 
+export const colors = [
+  '#ffffff',
+  '#000000',
+  '#374151',
+  '#b91c1c',
+  '#f87171',
+  '#fdba74',
+  '#c2410c',
+  '#fcd34d',
+  '#b45309',
+  '#bef264',
+  '#4d7c0f',
+  '#86efac',
+  '#15803d',
+  '#5eead4',
+  '#0f766e',
+  '#67e8f9',
+  '#0e7490',
+  '#93c5fd',
+  '#1d4ed8',
+  '#d8b4fe',
+  '#7e22ce',
+  '#f0abfc',
+  '#a21caf',
+  '#f9a8d4',
+  '#be185d',
+  '#fda4af',
+  '#be123c'
+]
+export const blockRegex = computed(() => { 
+  if ( dmSetting.blockWords.length == 0) return []
+  return  dmSetting.blockWords.split(' ').map(i => new RegExp(i))
+})

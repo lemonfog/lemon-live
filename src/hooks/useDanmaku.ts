@@ -1,9 +1,17 @@
-export const useDanmaku = (canvas: Ref<HTMLCanvasElement>) => {
+export const useDanmaku = (canvas:Ref<HTMLCanvasElement>,options:options) => {
   const dm = ref<Danmaku>()
+  let ob =  new ResizeObserver((entries)=>{
+      const a= entries[0].contentRect   
+      canvas.value.width = a.width * window.devicePixelRatio
+      canvas.value.height = a.height * window.devicePixelRatio 
+    })
   onMounted(() => {
-    dm.value = new Danmaku({canvas:canvas.value})
-    // setInterval(()=>dm.value?.add('弹幕测试'),1000)
+    ob.observe(canvas.value)
+    options.canvas = canvas.value
+    dm.value = new Danmaku(options)
+    // setInterval(()=>dm.value?.add('弹幕测试'),200)
   })
+  onBeforeUnmount(()=>ob.unobserve(canvas.value))
   return dm
 }
 
@@ -13,43 +21,54 @@ export class Danmaku {
   ctx: CanvasRenderingContext2D;
   isdraw: boolean;
   lines!: { top: number; width: number; }[];
-  textList: text[]
-  fontSize!: number
-  gap!: number;
-  area!: number; 
+  textList: text[] 
+  fontSize!:number
+  font!:string
+  rows!:number
+  gap!: number; 
   speed: number 
+  opacity!:number
+  opacityStr!:string
   constructor(options: options) {
 
     this.isdraw = false
     this.textList = []
-    this.canvas = options.canvas 
-    this.ctx = this.canvas.getContext('2d')! 
+    this.canvas = options.canvas! 
+    
+    
+    this.ctx = this.canvas.getContext('2d')!  
     this.speed = options.speed || 2 
     this.setFont(options.fontSize || 16)
-    this.setGap(this.fontSize * 0.75  )
-    this.setArea(options.area || 50)
+    this.setGap(options.gap||8 )
+    this.setRows(options.rows ||4 )
+    this.setOpacity(options.opacity|| 100)
     this.setColors(options.colors || ['FFFFFF', '#00FF80', '#00FFFF', '#FF00FF', '#8000FF', '#FF9933'])
-     
+    this.resize()
   }
-  resize(){
-    // this.setFont(this.fontSize) 
-    this.initLine(this.area)
+  resize(){ 
+    this.canvas.width = this.canvas.getBoundingClientRect().width *  window.devicePixelRatio
+    this.canvas.height=this.canvas.getBoundingClientRect().height *  window.devicePixelRatio
+    this.initRows()
   } 
+  setOpacity(val:number){
+    this.opacity = val
+    const a = Math.floor(2.55 * val).toString(16)
+    this.opacityStr = a.length==1?'0'+a:a  
+  }
+  setRows(val:number){
+    this.rows = val 
+  }
   setSpeed(val:number){
     this.speed = val
   }
   setFont(size: number, family?: string) {
     this.ctx.textBaseline = 'top'
     this.fontSize = size
-    this.ctx.font = `${size}px ${family || 'STheiti, SimHei'}`
+    this.font =  `${size}px sans-serif`  
   }
   setGap(gap:number){
-    this.gap = gap
-  }
-  setArea(area: number) {
-    this.area = area
-    this.initLine(area)
-  }
+    this.gap = gap 
+  } 
   setColors(colors: string[]) {
     this.colors = colors
   }
@@ -64,14 +83,14 @@ export class Danmaku {
     const line = this.getLine()
     if (line == -1) return
     const width = Math.ceil(this.ctx.measureText(value).width)
-    const w = this.canvas.width + width + this.gap/2
+    const w = this.canvas.width + width 
     this.lines[line].width = w
     this.textList.push({
       value,
       width,
       line,
       left: this.canvas.width, 
-      color: this.colors[Math.floor(Math.random() * 6)],
+      color: this.colors[Math.floor(Math.random() * this.colors.length)],
     })
     if (this.isdraw) return
     this.isdraw = true
@@ -85,16 +104,17 @@ export class Danmaku {
     }
     return -1
   }
-  private initLine(area: number) {
+  private initRows() {
     this.lines = []
     let i = -1
-    const height = this.gap + this.fontSize
-    const len = this.canvas.height * area / 100 / height | 0
-    while (++i < len) {
+    const height = this.gap + this.fontSize  
+    while (++i < this.rows ) {
       this.lines.push({ top: this.gap + height * i, width: this.canvas.width })
-    } 
+    }  
   }
-  private draw() {
+  private draw() {  
+    this.ctx.textBaseline = 'top'
+    this.ctx.font = this.font
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
     let index = -1
     let len = this.textList.length
@@ -103,11 +123,13 @@ export class Danmaku {
       const text = this.textList[index]
       const width = text.left + text.width
       if (width <= 0) continue
-      this.ctx.fillStyle = text.color
+      // this.ctx.fillStyle = text.color
+      this.ctx.fillStyle = text.color + this.opacityStr
+      const line = this.lines[text.line]
+      if(!line) continue
       this.ctx.fillText(text.value, text.left, this.lines[text.line].top )
       text.left -= this.speed
-      newList.push(text)
-      const line = this.lines[text.line]
+      newList.push(text) 
       line.width = Math.max(width, this.canvas.width)
     }
     this.textList = newList
@@ -117,12 +139,13 @@ export class Danmaku {
 }
 
 type options = {
-  canvas: HTMLCanvasElement,
+  canvas?: HTMLCanvasElement, 
   fontSize?: number,
   gap?: number,
-  area?: number,
+  rows?: number,
   time?: number
   speed?: number
+  opacity?:number
   colors?: string[]
 }
 type text = {

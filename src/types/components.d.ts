@@ -14,8 +14,10 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Select: typeof import('./../components/select/select.vue')['default']
+    Stepper: typeof import('./../components/stepper/stepper.vue')['default']
     Swipe: typeof import('./../components/swipe/swipe.vue')['default']
     SwipeItem: typeof import('./../components/swipe/swipeItem.vue')['default']
+    Switch: typeof import('./../components/switch/switch.vue')['default']
     Tab: typeof import('./../components/tabs/tab.vue')['default']
     Tabs: typeof import('./../components/tabs/tabs.vue')['default']
   }
