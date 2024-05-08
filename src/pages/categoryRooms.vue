@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { onLoad, onRefresh } from '../components/list/type';
+import type { onLoad } from '../components/list/type';
 import { getSubCategory } from '../store';
 
 // definePage({
@@ -33,23 +33,23 @@ const load: onLoad = (setStatus) => {
     state.hasMore = data.hasMore
     if (!data.hasMore) return setStatus('finshed')
     state.page++
-    setStatus('normal')
-    if(site.id=='bilibili'&& state.page==2) load(setStatus)
+    setStatus('normal') 
   }, msg => {
     name.value = msg
     setStatus('loaderror')
   })
 }
-
-const refresh: onRefresh = (ok) => {
+const isRefresh = ref(false)
+const refresh= () => {
+  isRefresh.value = true
   const { site, id } = route.meta 
-  useSiteFetch(site.id, 'getCategoryRooms', { id }).then(data => {
+  useSiteFetch(site.id, 'getCategoryRooms', { id, pid: pid.value, page: state.page }).then(data => {
     state.list.value = data.list
     state.hasMore = data.hasMore
     state.page++ 
   }, msg => {
     name.value = msg 
-  }).finally(ok)
+  }).finally(()=>isRefresh.value = false)
 }
 let fullPath = route.fullPath
 
@@ -77,10 +77,11 @@ onActivated(function () {
   <div h-full>
     <div flex p-2 text-lg>
       <div hover:text-amber @click="$router.back" class="i-mdi-arrow-left"></div>
-      <div hover:text-amber grow text-center>{{ name == null ? '分区不存在' : name==''?'加载中':name }}</div>
+      <div hover:text-amber grow text-center>{{`${route.meta.site?.name} ${name == null ? '分区不存在' : name==''?'加载中':name }`}}</div>
+      <div hover:text-amber @click="refresh" class="i-ri-refresh-line" :class="{'animate-spin':isRefresh}"></div>
     </div>
     <div v-if="name" class="h-[calc(100%-3.25rem)] scrolly">
-      <List :key="fullPath" @load="load" @refresh="refresh">
+      <List :key="fullPath" @load="load">
         <Rooms :list="state.list"></Rooms>
       </List>
     </div>
