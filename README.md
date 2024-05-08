@@ -2,7 +2,7 @@
  
 [https://lemonlive.deno.dev](https://lemonlive.deno.dev)
 
-虎牙直播、斗鱼直播、哔哩直播、CC直播
+虎牙直播、斗鱼直播、抖音直播、哔哩直播、CC直播
 
 deno + vite + vue
 

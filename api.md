@@ -2,7 +2,7 @@
 > 格式：https://lemonlive.deno.dev/api/[site]/[method]/[id]?&kw=[kw]&page=[page]
 
 ### site
-huya douyu bilibili cc 
+huya douyu douyin bilibili cc 
 
 ### method
 | method                |  说明           |  例如                                                              |
