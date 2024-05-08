@@ -20,6 +20,7 @@ declare global {
   const getMouseTouchEvent: typeof import('../hooks/useMouseTouch')['getMouseTouchEvent']
   const getScrollParent: typeof import('../hooks/useScrollParent')['getScrollParent']
   const h: typeof import('vue')['h']
+  const hasScrollY: typeof import('../hooks/useUtil')['hasScrollY']
   const inject: typeof import('vue')['inject']
   const isMobile: typeof import('../hooks/useMouseTouch')['isMobile']
   const isProxy: typeof import('vue')['isProxy']

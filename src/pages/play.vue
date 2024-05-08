@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import danmakuIconOpen from '../assets/icons/danmaku_open.png'
 import danmakuIconClose from '../assets/icons/danmaku_close.png'
-import { sites, addFollow, removeFollow, volume, setVolume, dmSetting,colors,blockRegex } from '../store'
+import { sites, addFollow, removeFollow, volume, setVolume, brightness, dmSetting, colors, blockRegex, setItem } from '../store'
 import { Flv, Hls } from 'lemon-mse';
 import { isMobile } from '../hooks/useMouseTouch'
+import { ungzip } from 'pako'
+import { decodeChatMessage, decodePushFrame, decodeResponse, encodePushFrame } from '../proto/douyin';
 
 // definePage({
 //   path: '/play/:siteId/:id', 
@@ -112,12 +114,13 @@ const showScrollBtn = ref(false)
 
 let alwaysBottom = true
 const canvas = ref()
-const dmk = useDanmaku( canvas,{
-  gap:dmSetting.canvasGap,
-  rows:dmSetting.canvasRows,
-  speed:dmSetting.canvasSpeed,
-  opacity:dmSetting.canvasOpacity,
-  colors: dmSetting.canvasColorOpen?dmSetting.colors:['#ffffff']   })
+const dmk = useDanmaku(canvas, {
+  gap: dmSetting.canvasGap,
+  rows: dmSetting.canvasRows,
+  speed: dmSetting.canvasSpeed,
+  opacity: dmSetting.canvasOpacity,
+  colors: dmSetting.canvasColorOpen ? dmSetting.colors : ['#ffffff']
+})
 // let cvTimer: number
 // let cvOb = new ResizeObserver((entries) => {
 //   clearTimeout(cvTimer)
@@ -135,11 +138,11 @@ const dmk = useDanmaku( canvas,{
 //   }, 100)
 // })
 
- 
+
 const addDm = (nick: string, msg: string) => {
-  
-  if(dmSetting.blockOpen && blockRegex.value.length && blockRegex.value.some(i=>i.test(msg))) return 
-  if ( dmCount %(dmSetting.sideClean || 100) == 0) {
+
+  if (dmSetting.blockOpen && blockRegex.value.length && blockRegex.value.some(i => i.test(msg))) return
+  if (dmCount % (dmSetting.sideClean || 100) == 0) {
     dm.value.innerHTML = ''
     scrolltop = 0
   }
@@ -147,11 +150,11 @@ const addDm = (nick: string, msg: string) => {
   if (dmSetting.canvasOpen) dmk.value?.add(msg)
   if (!state.showInfo || !dmSetting.sideOpen) return
   const n = document.createElement('div')
-  const  {sideColorOpen,sideFontsize,sideGap,colors} = dmSetting 
+  const { sideColorOpen, sideFontsize, sideGap, colors } = dmSetting
   n.style.margin = `${sideGap}px 0`
   n.style.fontSize = `${sideFontsize}px`
-  if(sideColorOpen) n.style.color = colors[Math.floor(Math.random() * colors.length) ]
-  
+  if (sideColorOpen) n.style.color = colors[Math.floor(Math.random() * colors.length)]
+
   n.innerHTML = `<span style="opacity:.5"> ${nick}：</span><span>${msg}</span>`
   dm.value.appendChild(n)
 }
@@ -188,10 +191,10 @@ const wsStart = () => {
     ws.onopen = () => {
       clearInterval(wsTimer)
       addDm('系统', '开始连接弹幕服务器')
-      dmOb.observe(dm.value) 
+      dmOb.observe(dm.value)
       dm.value.addEventListener('scroll', dmScroll)
       ws?.send(JSON.stringify({ command: "subscribeNotice", data: ["getMessageNotice"], reqId: Date.now().toString() }))
-      wsTimer = setInterval(() => { 
+      wsTimer = setInterval(() => {
         ws!.send('ping')
       }, 45000)
     }
@@ -212,7 +215,7 @@ const wsStart = () => {
     ws.onopen = () => {
       clearInterval(wsTimer)
       addDm('系统', '开始连接弹幕服务器')
-      dmOb.observe(dm.value) 
+      dmOb.observe(dm.value)
       dm.value.addEventListener('scroll', dmScroll)
       ws!.send(douyuEncode(`type@=loginreq/roomid@=${room.value?.roomId}`))
       ws!.send(douyuEncode(`type@=joingroup/rid@=${room.value?.roomId}/gid@=-9999`))
@@ -237,6 +240,43 @@ const wsStart = () => {
       addDm('系统', '弹幕服务器连接失败')
     }
 
+  }
+  else if (room.value.siteId == 'douyin') {
+    const url = room.value?.ws
+    if (!url) return
+    ws = new WebSocket(url)
+    ws.binaryType = 'arraybuffer'
+    ws.onopen = () => {
+      clearInterval(wsTimer)
+      addDm('系统', '开始连接弹幕服务器')
+      dmOb.observe(dm.value)
+      dm.value.addEventListener('scroll', dmScroll)
+      wsTimer = setInterval(() => {
+        if (ws?.readyState != 1) return
+        ws.send(encodePushFrame({ payloadType: 'bh' }))
+      }, 10000)
+    }
+    ws.onmessage = (e) => {
+      dmCount++
+      if (dmCount == 1) addDm('系统', '弹幕服务器连接成功')
+      const barrageDecode = decodePushFrame(new Uint8Array(e.data))
+      const decompressed = ungzip(barrageDecode.payload!)
+      const res = decodeResponse(new Uint8Array(decompressed))
+      const list = res.messagesList
+      if (!list || list.length == 0) return
+      const len = list.length
+      let i = -1
+      while (++i < len) {
+        if (list[i].method != 'WebcastChatMessage') continue
+        const res = decodeChatMessage(list[i].payload!)
+        addDm(res.user!.nickName!, res.content!)
+      }
+      if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
+    }
+    ws.onerror = () => {
+      clearInterval(wsTimer)
+      addDm('系统', '弹幕服务器连接失败')
+    }
   }
 
 }
@@ -347,28 +387,28 @@ const pauseEvent = () => {
   autoHide()
 }
 
-const volumeUp = () => {
-  clearTimeout(noticeTimer)
-  setVolume(true)
-  video.value.volume = volume.value / 100
-  state.notice = `当前音量 ${volume.value}`
-  noticeTimer = setTimeout(() => state.notice = null, 1000)
-}
-const volumeDown = () => {
-  clearTimeout(noticeTimer)
-  setVolume(false)
-  video.value.volume = volume.value / 100
-  state.notice = `当前音量 ${volume.value}`
-  noticeTimer = setTimeout(() => state.notice = null, 1000)
-}
+// const volumeUp = () => {
+//   clearTimeout(noticeTimer)
+//   setVolume(true)
+//   video.value.volume = volume.value / 100
+//   state.notice = `当前音量 ${volume.value}`
+//   noticeTimer = setTimeout(() => state.notice = null, 1000)
+// }
+// const volumeDown = () => {
+//   clearTimeout(noticeTimer)
+//   setVolume(false)
+//   video.value.volume = volume.value / 100
+//   state.notice = `当前音量 ${volume.value}`
+//   noticeTimer = setTimeout(() => state.notice = null, 1000)
+// }
 const hotkey = (e: KeyboardEvent) => {
   // if (!(player.value.focus) || !url.value) return
   if (!url.value) return
   switch (e.code) {
     case 'ArrowDown':
-      return volumeDown()
+      return setVolume(false)
     case 'ArrowUp':
-      return volumeUp()
+      return setVolume(true)
     case 'Space':
       return play()
   }
@@ -392,11 +432,11 @@ let fullPath = route.fullPath
 onMounted(() => {
   video.value.volume = volume.value / 100
   video.value.addEventListener('canplay', () => { state.notice = null })
-  if (!isMobile){
-     player.value.addEventListener('mousemove', autoHide)
-      document.addEventListener('keydown', hotkey)
+  if (!isMobile) {
+    player.value.addEventListener('mousemove', autoHide)
+    document.addEventListener('keydown', hotkey)
   }
- 
+
   if (document.pictureInPictureElement) {
     document.exitPictureInPicture()
   }
@@ -454,27 +494,41 @@ const togglePictureInPicture = () => {
 }
 
 
-const toggleColor = (e:Event)=>{
-    const color = (e.target as HTMLElement).dataset.color
-    if(!color) return
-    const index = dmSetting.colors.findIndex((i)=>i==color)
-    if(index==-1) return dmSetting.colors.push(color)
-    if(dmSetting.colors.length==1) return
-    dmSetting.colors.splice(index,1)
- }
+const toggleColor = (e: Event) => {
+  const color = (e.target as HTMLElement).dataset.color
+  if (!color) return
+  const index = dmSetting.colors.findIndex((i) => i == color)
+  if (index == -1) return dmSetting.colors.push(color)
+  if (dmSetting.colors.length == 1) return
+  dmSetting.colors.splice(index, 1)
+}
 
 
-watch(()=>dmSetting.colors,()=>dmk.value?.setColors(dmSetting.colors) ) 
-watch(()=>dmSetting.canvasSpeed,()=>dmk.value?.setSpeed(dmSetting.canvasSpeed))
-watch(()=> dmSetting.canvasOpacity,()=> dmk.value?.setOpacity(dmSetting.canvasOpacity)) 
-watch(()=>dmSetting.canvasColorOpen,()=>dmk.value?.setColors(dmSetting.canvasColorOpen?dmSetting.colors:['#ffffff']  ))
-watchEffect(()=>{ 
-  dmk.value?.setGap(dmSetting.canvasGap)  
+watch(() => dmSetting.colors, () => dmk.value?.setColors(dmSetting.colors))
+watch(() => dmSetting.canvasSpeed, () => dmk.value?.setSpeed(dmSetting.canvasSpeed))
+watch(() => dmSetting.canvasOpacity, () => dmk.value?.setOpacity(dmSetting.canvasOpacity))
+watch(() => dmSetting.canvasColorOpen, () => dmk.value?.setColors(dmSetting.canvasColorOpen ? dmSetting.colors : ['#ffffff']))
+watchEffect(() => {
+  dmk.value?.setGap(dmSetting.canvasGap)
   dmk.value?.setFont(dmSetting.canvasFontsize)
   dmk.value?.setRows(dmSetting.canvasRows)
   dmk.value?.resize()
 })
 
+watch(volume, () => {
+  clearTimeout(noticeTimer)
+  state.notice = `当前音量 ${volume.value}%`
+  video.value.volume = volume.value / 100
+  setItem('volume', volume.value)
+  noticeTimer = setTimeout(() => state.notice = null, 1000)
+})
+watch(brightness, () => {
+  clearTimeout(noticeTimer)
+  state.notice = `当前亮度 ${brightness.value}%`
+  player.value.style.filter = `brightness(${brightness.value / 100})`
+  setItem('brightness', brightness.value)
+  noticeTimer = setTimeout(() => state.notice = null, 1000)
+})
 </script>
 
 <template>
@@ -521,7 +575,6 @@ watchEffect(()=>{
           <div hover:text-amber @click="fullscreen"
             :class="state.fullscreen ? 'i-ri-fullscreen-exit-fill' : 'i-ri-fullscreen-fill'">
           </div>
-
         </div>
       </div>
     </div>
@@ -554,7 +607,8 @@ watchEffect(()=>{
           </div>
         </Tab>
         <Tab title="关注" box-border px-4>
-          <router-link v-for="i in follows" :class="{ 'text-amber': room?.siteId == i.siteId && room?.roomId == i.roomId }"
+          <router-link v-for="i in follows"
+            :class="{ 'text-amber': room?.siteId == i.siteId && room?.roomId == i.roomId }"
             :key="`${i.siteId}/${i.roomId}`" :to="`/play/${i.siteId}/${i.roomId}`" flex items-center gap-2 py-2>
             <img w-5 h-5 rounded-5 v-lazy="i.avatar" alt="">
             <div>{{ i.nickname }} </div>
@@ -564,68 +618,68 @@ watchEffect(()=>{
         </Tab>
         <Tab title="设置" px-2>
           <!-- <div w-full p-2 box-border> -->
-            <div p-3 bg-sm>弹幕</div>
-            <div flex flex-col b b-solid b-gray-6 rounded-2 px-2>
-              <div flex justify-between items-center mx-2 py-2>
-                <div>文字大小</div>
-                <Stepper v-model:value="dmSetting.canvasFontsize" :max="80" :min="8" :step="1"></Stepper>
-              </div>
-              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-                <div>上下间隔</div>
-                <Stepper v-model:value="dmSetting.canvasGap" :max="80" :min="1" :step="1"></Stepper>
-              </div>
-              <div flex justify-between items-center mx-2 py-2>
-                <div>最大行数</div>
-                <Stepper v-model:value="dmSetting.canvasRows" :max="50" :min="1" :step="1"></Stepper>
-              </div>
-              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-                <div>弹幕速度</div>
-                <Stepper v-model:value="dmSetting.canvasSpeed" :max="32" :min="0.5" :step="0.5"></Stepper>
-              </div>
-              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-                <div>弹幕透明</div>
-                <Stepper v-model:value="dmSetting.canvasOpacity" :max="100" :min="10" :step="10"></Stepper>
-              </div>
-              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-                <div>彩色弹幕</div>
-                <Switch v-model:value="dmSetting.canvasColorOpen"></Switch>
-              </div>
-
+          <div p-3 bg-sm>弹幕</div>
+          <div flex flex-col b b-solid b-gray-6 rounded-2 px-2>
+            <div flex justify-between items-center mx-2 py-2>
+              <div>文字大小</div>
+              <Stepper v-model:value="dmSetting.canvasFontsize" :max="80" :min="8" :step="1"></Stepper>
             </div>
-            <div p-3 bg-sm>聊天</div>
-            <div flex flex-col b b-solid b-gray-6 rounded-2 px-2>
-              <div flex justify-between items-center mx-2 py-2>
-                <div>文字大小</div>
-                <Stepper v-model:value="dmSetting.sideFontsize" :max="80" :min="8" :step="1"></Stepper>
-              </div>
-              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-                <div>上下间隔</div>
-                <Stepper v-model:value="dmSetting.sideGap" :max="80" :min="0" :step="1"></Stepper>
-              </div>
-              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-                <div>自动清屏</div>
-                <Stepper v-model:value="dmSetting.sideClean" :max="500" :min="10" :step="10"></Stepper>
-              </div>
-              <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-                <div>彩色消息</div>
-                <Switch v-model:value="dmSetting.sideColorOpen"></Switch>
-              </div>
+            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+              <div>上下间隔</div>
+              <Stepper v-model:value="dmSetting.canvasGap" :max="80" :min="1" :step="1"></Stepper>
+            </div>
+            <div flex justify-between items-center mx-2 py-2>
+              <div>最大行数</div>
+              <Stepper v-model:value="dmSetting.canvasRows" :max="50" :min="1" :step="1"></Stepper>
+            </div>
+            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+              <div>弹幕速度</div>
+              <Stepper v-model:value="dmSetting.canvasSpeed" :max="32" :min="0.5" :step="0.5"></Stepper>
+            </div>
+            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+              <div>弹幕透明</div>
+              <Stepper v-model:value="dmSetting.canvasOpacity" :max="100" :min="10" :step="10"></Stepper>
+            </div>
+            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+              <div>彩色弹幕</div>
+              <Switch v-model:value="dmSetting.canvasColorOpen"></Switch>
             </div>
 
-            <div p-3 bg-sm>颜色</div>
-            <div flex flex-wrap shadow blur bg-dark p-2 box-border b b-solid b-gray-7
-              style="box-shadow:0 6px 15px 0 rgba(0, 0, 0, .5) ;" rounded>
-              <div v-for="color in colors" @click="toggleColor">
-                <div class="w-4 h-4 rounded-2 m-2 shadow" box-border :data-color="color" cursor-pointer
-                  :style="`background:${color};${dmSetting.colors.includes(color) ? 'box-shadow:0 0 0px 2px white' : ''}`">
-                </div>
+          </div>
+          <div p-3 bg-sm>聊天</div>
+          <div flex flex-col b b-solid b-gray-6 rounded-2 px-2>
+            <div flex justify-between items-center mx-2 py-2>
+              <div>文字大小</div>
+              <Stepper v-model:value="dmSetting.sideFontsize" :max="80" :min="8" :step="1"></Stepper>
+            </div>
+            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+              <div>上下间隔</div>
+              <Stepper v-model:value="dmSetting.sideGap" :max="80" :min="0" :step="1"></Stepper>
+            </div>
+            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+              <div>自动清屏</div>
+              <Stepper v-model:value="dmSetting.sideClean" :max="500" :min="10" :step="10"></Stepper>
+            </div>
+            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
+              <div>彩色消息</div>
+              <Switch v-model:value="dmSetting.sideColorOpen"></Switch>
+            </div>
+          </div>
+
+          <div p-3 bg-sm>颜色</div>
+          <div flex flex-wrap shadow blur bg-dark p-2 box-border b b-solid b-gray-7
+            style="box-shadow:0 6px 15px 0 rgba(0, 0, 0, .5) ;" rounded>
+            <div v-for="color in colors" @click="toggleColor">
+              <div class="w-4 h-4 rounded-2 m-2 shadow" box-border :data-color="color" cursor-pointer
+                :style="`background:${color};${dmSetting.colors.includes(color) ? 'box-shadow:0 0 0px 2px white' : ''}`">
               </div>
             </div>
-            <div p-3 bg-sm flex justify-between items-center>屏蔽
-              <Switch v-model:value="dmSetting.blockOpen" />
-            </div>
-            <textarea outline-none w-full v-model.trim="dmSetting.blockWords" text-white b b-solid b-gray-7 p-2 box-border rows="5"
-              bg-dark shadow rounded-1 placeholder="以空格分隔"></textarea>
+          </div>
+          <div p-3 bg-sm flex justify-between items-center>屏蔽
+            <Switch v-model:value="dmSetting.blockOpen" />
+          </div>
+          <textarea outline-none w-full v-model.trim="dmSetting.blockWords" text-white b b-solid b-gray-7 p-2 box-border
+            rows="5" bg-dark shadow rounded-1 placeholder="以空格分隔"></textarea>
           <!-- </div> -->
         </Tab>
       </Tabs>

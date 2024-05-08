@@ -8,10 +8,12 @@
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "prod": "vite build && cd f:/deno/lemonlive && deployctl deploy --prod && cd f:/vue/lemonlive",
-    "git":"vite build github/dist"
+    "git": "vite build github/dist"
   },
   "dependencies": {
+    "@types/pako": "^2.0.3",
     "lemon-mse": "^0.1.7",
+    "pako": "^2.1.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.1"
   },

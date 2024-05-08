@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import unocss from 'unocss/vite' 
+import unocss from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'  
+import Components from 'unplugin-vue-components/vite'
 import EsmCdn from 'unplugin-esm-cdn/vite'
 import legacy from '@vitejs/plugin-legacy'
 
@@ -40,14 +40,14 @@ export default defineConfig({
       dts: 'src/types/components.d.ts',
     }),
     EsmCdn({
-      sleep:2000,
-      cdn:'npmmirror',
-      modules:['vue','vue-router',{name:'lemon-mse',var:'window',files:['dist/flv.js','dist/hls.js']}]
+      sleep: 2000,
+      cdn: 'npmmirror',
+      modules: ['vue', 'vue-router', { name: 'lemon-mse', var: 'window', files: ['dist/flv.js', 'dist/hls.js'] }, { name: 'pako', var: 'window.pako', files: ['dist/pako.min.js'] }]
     })
   ],
   build: {
     outDir: 'F:/deno/lemonlive/dist',
-    emptyOutDir:true
+    emptyOutDir: true,
   }
 })
 

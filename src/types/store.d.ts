@@ -3,7 +3,7 @@ import type { ShallowReactive } from "vue"
 export { }
 
 declare  global {
-  type siteId = 'huya' | 'douyu' | 'bilibili' | 'cc'
+  type siteId = 'huya' | 'douyu'|'douyin' | 'bilibili' | 'cc'
 
   type site = {
     name: string,

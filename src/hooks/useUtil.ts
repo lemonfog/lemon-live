@@ -26,3 +26,12 @@ export const foreach = <T>(arr: T[], iteratee: (item: T) => void) => {
 //   const parentHidden = el.offsetParent==null&& style.position!=='fixed'
 //   return hidden||parentHidden
 // }
+
+
+export const hasScrollY = (el: HTMLElement) => {
+  if (el.scrollTop > 0) return true
+  el.scrollTop = 1
+  const result = !!el.scrollTop
+  el.scrollTop = 0
+  return result
+}

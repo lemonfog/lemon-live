@@ -21,6 +21,16 @@ export const sites: site[] = [
     follows: reactive(getFollows('douyu')),
   },
   {
+    name: '抖音直播',
+    icon: 'https://www.douyin.com/favicon.ico',
+    id: 'douyin',
+    categories: ref([]),
+    categoryActive: ref(0),
+    recommend: { page: 1, hasMore: true, list: ref([]) },
+    search: { page: 1, hasMore: true, list: ref([]) },
+    follows: reactive(getFollows('douyin')),
+  },
+  {
     name: '哔哩直播',
     icon: 'https://www.bilibili.com/favicon.ico',
     id: 'bilibili',
@@ -43,13 +53,14 @@ export const sites: site[] = [
 ]
 
 export const volume = ref(getItem('volume', 70))
+export const brightness = ref(getItem('brightness', 50))
 
 export const setVolume = (isAdd: boolean) => {
   volume.value = isAdd ? Math.min(100, volume.value + 5)
     : Math.max(0, volume.value - 5)
 }
 
-watch(volume, () => setItem('volume', volume.value))
+
 
 const sitesMap = {} as { [x in siteId]: number }
 
@@ -105,7 +116,7 @@ export const dmSetting = reactive(getItem('dm-settings', {
   sideGap: 2,
   sideColorOpen: false as boolean,
   sideClean: 100,
-  colors: ['#ffffff','#7e22ce','1d4ed8','#be185d','#fcd34d'],
+  colors: ['#ffffff', '#7e22ce', '1d4ed8', '#be185d', '#fcd34d'],
   blockOpen: false,
   blockWords: ''
 }))
@@ -152,7 +163,9 @@ export const colors = [
   '#fda4af',
   '#be123c'
 ]
-export const blockRegex = computed(() => { 
-  if ( dmSetting.blockWords.length == 0) return []
-  return  dmSetting.blockWords.split(' ').map(i => new RegExp(i))
+export const blockRegex = computed(() => {
+  if (dmSetting.blockWords.length == 0) return []
+  return dmSetting.blockWords.split(' ').map(i => new RegExp(i))
 })
+
+
