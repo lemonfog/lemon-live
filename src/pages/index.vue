@@ -11,8 +11,7 @@ const load: onLoad = (setStatus) => {
     recommend.hasMore = data.hasMore 
     if (!recommend.hasMore) return setStatus('finshed')
     recommend.page++
-    setStatus('normal')
-    if(sites[active.value].id=='bilibili'&& recommend.page==2) load(setStatus)
+    setStatus('normal') 
   }, () => setStatus('loaderror'))
 }
 

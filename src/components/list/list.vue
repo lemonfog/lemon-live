@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { hasScrollY } from '../../hooks/useUtil';
 import type { status } from './type'
 const props = withDefaults(defineProps<{
   finshedText?: string
@@ -51,6 +52,10 @@ const btnCilck = () => parentScroll.value.scrollTop = 0
 const reLoad = () => {
   setStatus('loading')
   emit('load', setStatus)
+  nextTick(()=>{
+    if(hasScrollY(root.value)) return
+    emit('load', setStatus)
+  })
 }
 
 // const onRefresh = (ok: () => void) => {
