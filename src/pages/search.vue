@@ -44,6 +44,7 @@ const tabClick = (index: number) => {
 const router = useRouter()
 
 const goRoom = () => {
+  if(!kw.value) return
   if (/^[\d]*$/.test(kw.value)) {
     router.push(`/play/${site.value.id}/${kw.value}`)
     return true
@@ -61,7 +62,7 @@ const goSearch = () => {
 <template>
   <div text-center py-1>
     <div class="w-60%  max-w-md pos-relative inline-block">
-      <input md:text-4 type="text" v-model="kw" box-border w-full py-2.5  pl-3 pr-9 text-white bg-transparent b-1 b-green rounded-6
+      <input md:text-4 type="text" v-model.trim="kw" box-border w-full py-2.5  pl-3 pr-9 text-white bg-transparent b-1 b-green rounded-6
         outline-0 @keydown.enter="goSearch" placeholder="请输入房间号或关键字">
       <div class="i-ri-search-line top-50% " absolute right-3 @click="goSearch" style="transform:translateY(-50%)">
       </div>
