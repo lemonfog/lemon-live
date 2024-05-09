@@ -2,8 +2,8 @@ import type { ShallowReactive } from "vue"
 
 export { }
 
-declare  global {
-  type siteId = 'huya' | 'douyu'|'douyin' | 'bilibili' | 'cc'
+declare global {
+  type siteId = 'huya' | 'douyu' | 'douyin' | 'bilibili' | 'cc'
 
   type site = {
     name: string,
@@ -12,12 +12,12 @@ declare  global {
     categories: Ref<LiveCategory[]>
     categoryActive: Ref<number>,
     recommend: page
-    search:page
-    follows:Reactive<{[x:string]:LiveRoomItem}>
+    search: page
+    follows: Reactive<{ [x: string]: LiveRoomItem }>
   }
   type page = {
-      page: number
-      hasMore: boolean
-      list: Ref<LiveRoomItem[]>,
-    }
+    page: number
+    hasMore: boolean
+    list: Ref<LiveRoomItem[]>,
+  }
 }

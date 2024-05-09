@@ -61,7 +61,7 @@ export class Danmaku {
   setSpeed(val:number){
     this.speed = val
   }
-  setFont(size: number, family?: string) {
+  setFont(size: number) {
     this.ctx.textBaseline = 'top'
     this.fontSize = size
     this.font =  `${size}px sans-serif`  

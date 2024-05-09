@@ -60,12 +60,9 @@ export const setVolume = (isAdd: boolean) => {
     : Math.max(0, volume.value - 5)
 }
 
-
-
-const sitesMap = {} as { [x in siteId]: number }
-
-sites.forEach((site, index) => sitesMap[site.id] = index)
-export { sitesMap }
+// const sitesMap = {} as { [x in siteId]: number }
+// sites.forEach((site, index) => sitesMap[site.id] == index)
+// export { sitesMap }
 
 export function getFollows(site: siteId) {
   const val = localStorage.getItem('follows-' + site)
@@ -73,8 +70,7 @@ export function getFollows(site: siteId) {
 }
 
 export function addFollow(room: LiveRoomItem) {
-  const site = sites.find(i => i.id = room.siteId)!
-  // if (site == undefined) return false
+  const site = sites.find(i => i.id == room.siteId)! 
   room.siteId = site.id
   site.follows[room.roomId] = { ...room, stream: undefined, ws: undefined }
   localStorage.setItem('follows-' + room.siteId, JSON.stringify(site.follows))
@@ -82,8 +78,7 @@ export function addFollow(room: LiveRoomItem) {
 }
 
 export function removeFollow(siteId: siteId, roomId: string) {
-  const site = sites.find(i => i.id = siteId)!
-  // if (site == undefined) return true
+  const site = sites.find(i => i.id == siteId)! 
   delete site.follows[roomId]
   localStorage.setItem('follows-' + siteId, JSON.stringify(site.follows))
   return Reflect.has(site.follows, roomId)
