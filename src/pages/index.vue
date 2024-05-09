@@ -2,15 +2,25 @@
 import type { onLoad } from '../components/list/type';
 import { cookies, sites } from '../store'
 
-const active = ref(0)
+const route = useRoute()
+const router = useRouter()
 
+const active = ref((() => {
+  if (!route.query.site) return 0
+  const index = sites.findIndex(i => i.id == route.query.site)
+  return index == -1 ? 0 : index
+})())
+
+const siteId = computed(() => sites[active.value].id)
+
+watch(siteId ,()=> router.push(`/?site=${siteId.value}`) )
+onActivated(()=> router.replace(`/?site=${siteId.value}`) )
 const load: onLoad = (setStatus) => {
   const recommend = sites[active.value].recommend
-  const siteId = sites[active.value].id
-  useSiteFetch(siteId, 'getRecommendRooms', { page: recommend.page }).then(data => {
+  useSiteFetch(siteId.value, 'getRecommendRooms', { page: recommend.page }).then(data => {
     recommend.list.value = recommend.list.value.concat(data.list)
     recommend.hasMore = data.hasMore
-    if (!cookies[siteId]) cookies[siteId] = data.cookie
+    if (!cookies[siteId.value]) cookies[siteId.value] = data.cookie
     if (!recommend.hasMore) return setStatus('finshed')
     recommend.page++
     setStatus('normal')
@@ -23,13 +33,12 @@ const tabClick = () => {
   if (active2 != active.value) return active2 = active.value
   const recommend = sites[active.value].recommend
   isRefresh.value = true
-  recommend.page = 1 
-  const siteId = sites[active.value].id 
-  useSiteFetch(siteId, 'getRecommendRooms',  { page: recommend.page }  ).then(data => {
+  recommend.page = 1
+  useSiteFetch(siteId.value, 'getRecommendRooms', { page: recommend.page }).then(data => {
     recommend.list.value = data.list
     recommend.hasMore = data.hasMore
     recommend.page++
-    if (!cookies[siteId]) cookies[siteId] = data.cookie
+    if (!cookies[siteId.value]) cookies[siteId.value] = data.cookie
   }).finally(() => isRefresh.value = false)
 }
 

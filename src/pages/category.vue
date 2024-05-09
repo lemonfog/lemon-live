@@ -1,13 +1,27 @@
 <script setup lang="ts"> 
 import { sites } from '../store';
 
-const active = ref(0) 
+const route = useRoute()
+const router = useRouter()
+
+const active = ref((() => {
+  if (!route.query.site) return 0
+  const index = sites.findIndex(i => i.id == route.query.site)
+  return index == -1 ? 0 : index
+})())
+
+const siteId = computed(() => sites[active.value].id)
+
+watch(siteId,()=>  router.push(`/category/?site=${siteId.value}`))
+
+onActivated(()=> router.replace(`/category/?site=${siteId.value}`) )
+
 let msg = ref()
  
 const inited = (index:number)=>{
   if(sites[index].categories.value.length) return 
   msg.value='加载中...'
-  useSiteFetch(sites[index].id,'getCategories').then(data=>{
+  useSiteFetch(siteId.value,'getCategories').then(data=>{
     msg.value=null
     sites[index].categories.value = data
   },err=>msg.value=err)
