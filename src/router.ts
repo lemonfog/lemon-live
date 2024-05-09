@@ -85,8 +85,7 @@ export const router = createRouter({
 async function beforeEnter(to: RouteLocation) {
   const { siteId, id } = to.params as any
   const site = sites.find(i => i.id == siteId)
-  if (site == undefined) return false
-  if(site.id=='douyin')
+  if (site == undefined) return false 
   to.meta.site = site
   to.meta.id = id
   return true

@@ -1,13 +1,16 @@
+import { cookies } from "../store"
+
 const baseUrl = 'https://lemonlive.deno.dev/api/'
 // const baseUrl = 'http://localhost:8000/api/'
 
-export const useSiteFetch = (id: siteId, method: LiveSiteMethod, params?: QueryParams) => {
+export const useSiteFetch = (id: siteId, method: LiveSiteMethod, params: QueryParams = {}) => {
   // const controller = new AbortController()
   // let timer = setTimeout(() => {
   // controller.abort()
   // Promise.reject('请求超时')
   // return Promise.reject('请求超时')
   // }, 5000)
+  if(id=='douyin') params.cookie = cookies[id]
   return fetch(`${baseUrl}${id}/${method}?${new URLSearchParams(params as any).toString()}`, {
     // signal: controller.signal
   }).then(async res => {

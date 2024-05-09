@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { onLoad } from '../components/list/type';
-import { getSubCategory } from '../store';
+import { cookies, getSubCategory } from '../store';
 
 // definePage({
 //   path: '/category/:siteId/:id',
@@ -31,6 +31,7 @@ const load: onLoad = (setStatus) => {
   useSiteFetch(site.id, 'getCategoryRooms', { id, pid: pid.value, page: state.page }).then(data => {
     state.list.value = state.list.value.concat(data.list)
     state.hasMore = data.hasMore
+    if (!cookies[site.id]) cookies[site.id] = data.cookie
     if (!data.hasMore) return setStatus('finshed')
     state.page++
     setStatus('normal') 
@@ -47,6 +48,7 @@ const refresh= () => {
     state.list.value = data.list
     state.hasMore = data.hasMore
     state.page++ 
+    if (!cookies[site.id]) cookies[site.id] = data.cookie
   }, msg => {
     name.value = msg 
   }).finally(()=>isRefresh.value = false)

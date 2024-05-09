@@ -1,6 +1,6 @@
 <script setup lang="ts"> 
 import type { onLoad } from '../components/list/type';
-import { sites } from '../store'
+import { cookies, sites } from '../store'
 
 
 const active = ref(0)
@@ -13,20 +13,24 @@ const search = () => {
   search.list.value = []
   search.page = 1
   search.hasMore = true
-  status.value = '搜索中...'
-  return useSiteFetch(site.value.id, 'searchRooms', { page: search.page, kw: kw.value }).then(data => {
+  status.value = '搜索中...' 
+  const siteId = site.value.id 
+  return useSiteFetch(siteId, 'searchRooms', { page: search.page, kw: kw.value } ).then(data => {
     search.list.value = data.list
     search.hasMore = data.hasMore
     search.page += 1
     status.value = 'finished'
+    if (!cookies[siteId]) cookies[siteId] = data.cookie
   }, msg => status.value = msg)
 }
 
 const load: onLoad = (setStatus) => {
   const search = site.value.search
-  useSiteFetch(site.value.id, 'searchRooms', { page: search.page, kw: kw.value }).then(data => {
+  const siteId = site.value.id 
+  useSiteFetch(siteId, 'searchRooms', { page: search.page, kw: kw.value } ).then(data => {
     search.list.value = search.list.value.concat(data.list)
     search.hasMore = data.hasMore
+    if (!cookies[siteId]) cookies[siteId] = data.cookie
     if (!search.hasMore) return setStatus('finshed')
     search.page += 1
     setStatus('normal')

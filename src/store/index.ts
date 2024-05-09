@@ -164,3 +164,6 @@ export const blockRegex = computed(() => {
 })
 
 
+export const cookies = reactive(getItem('cookies',{} as Record<siteId,string|undefined>))
+
+watchEffect(()=>setItem('cookies',cookies) )
