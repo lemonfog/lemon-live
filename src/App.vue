@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { getItem,setItem } from './store';
 
 const navs = [
   {
-
+    
     icon: 'i-ri-heart-line',
     link: '/follow'
   },
@@ -21,14 +22,20 @@ const navs = [
     link: '/user'
   }
 ]
+const hasDouyinCookie = ref(getItem('douyin-cookie',false))
 
 onMounted(()=>{
   document.querySelector('main')!.style.height =`calc(${window.innerHeight}px - 3.5rem)`
+  setTimeout(()=>{
+    hasDouyinCookie.value = true
+    setItem('douyin-cookie',true)
+  },3000)
 })
 
 </script>
 
 <template>
+  <iframe v-if="!hasDouyinCookie"  src="https://live.douyin.com" pos-absolute width="0" height="0"></iframe>
   <div text-sm pos-fixed bottom-0 left-0 right-0 md:py-2 b-t-solid b b-gray-7 md:b-r-solid md:top-0 md:right-auto flex
     justify-around md:flex-col md:justify-left bg-dark-7 z-10>
     <router-link v-for="i in navs" :to="i.link" hover:text-amber rounded-2 py-2 px-4 m-2

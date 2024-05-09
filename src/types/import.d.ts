@@ -64,6 +64,7 @@ declare global {
   const useBoolean: typeof import('../hooks/useState')['useBoolean']
   const useCheckFollows: typeof import('../hooks/useSiteFetch')['useCheckFollows']
   const useChildren: typeof import('../hooks/useRelation')['useChildren']
+  const useCookie: typeof import('../hooks/useCookie')['useCookie']
   const useCssModule: typeof import('vue')['useCssModule']
   const useCssVars: typeof import('vue')['useCssVars']
   const useDanmaku: typeof import('../hooks/useDanmaku')['useDanmaku']
