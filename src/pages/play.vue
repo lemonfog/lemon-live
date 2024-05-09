@@ -140,7 +140,7 @@ const dmk = useDanmaku(canvas, {
 
 
 const addDm = (nick: string, msg: string) => {
-
+  dmCount++
   if (dmSetting.blockOpen && blockRegex.value.length && blockRegex.value.some(i => i.test(msg))) return
   if (dmCount % (dmSetting.sideClean || 100) == 0) {
     dm.value.innerHTML = ''
@@ -198,9 +198,8 @@ const wsStart = () => {
         ws!.send('ping')
       }, 45000)
     }
-    ws.onmessage = (e) => {
-      dmCount++
-      if (dmCount == 1) return addDm('系统', '弹幕服务器连接成功')
+    ws.onmessage = (e) => { 
+      if (dmCount == 0) return addDm('系统', '弹幕服务器连接成功')
       const { sendNick, content } = JSON.parse(e.data).data
       addDm(sendNick, content)
       if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
@@ -223,9 +222,8 @@ const wsStart = () => {
         ws!.send(douyuEncode(`type@=mrkl/`))
       }, 45000)
     }
-    ws.onmessage = async ({ data }) => {
-      dmCount++
-      if (dmCount == 1) addDm('系统', '弹幕服务器连接成功')
+    ws.onmessage = async ({ data }) => { 
+      if (dmCount == 0) addDm('系统', '弹幕服务器连接成功')
       const str = await data.text()
       const arr = str.split(/type@=chatmsg\//)
       arr.forEach((i: string) => {
@@ -256,9 +254,8 @@ const wsStart = () => {
         ws.send(encodePushFrame({ payloadType: 'bh' }))
       }, 10000)
     }
-    ws.onmessage = (e) => {
-      dmCount++
-      if (dmCount == 1) addDm('系统', '弹幕服务器连接成功')
+    ws.onmessage = (e) => { 
+      if (dmCount == 0) addDm('系统', '弹幕服务器连接成功')
       const barrageDecode = decodePushFrame(new Uint8Array(e.data))
       const decompressed = ungzip(barrageDecode.payload!)
       const res = decodeResponse(new Uint8Array(decompressed))
@@ -276,6 +273,7 @@ const wsStart = () => {
     ws.onerror = () => {
       clearInterval(wsTimer)
       addDm('系统', '弹幕服务器连接失败')
+      addDm('系统','请允许第三方cookie 连接抖音弹幕必须')
     }
   }
 
