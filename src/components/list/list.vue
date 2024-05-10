@@ -48,14 +48,15 @@ onBeforeUnmount(removehook)
 
 const btnShow = computed(() => scrollTop.value > 50)
 const btnCilck = () => parentScroll.value.scrollTop = 0
-
+ 
 const reLoad = () => {
   setStatus('loading')
   emit('load', setStatus)
-  nextTick(()=>{
-    if(hasScrollY(root.value)) return
+  setTimeout(()=>{ 
+    if(hasScrollY(parentScroll.value)) return
     emit('load', setStatus)
-  })
+  },2000)
+  
 }
 
 // const onRefresh = (ok: () => void) => {

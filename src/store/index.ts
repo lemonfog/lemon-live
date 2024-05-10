@@ -52,6 +52,8 @@ export const sites: site[] = [
   },
 ]
 
+export const sitesArr = ['huya','douyu','douyin','bilibili','cc']
+
 export const volume = ref(getItem('volume', 70))
 export const brightness = ref(getItem('brightness', 50))
 
@@ -59,10 +61,7 @@ export const setVolume = (isAdd: boolean) => {
   volume.value = isAdd ? Math.min(100, volume.value + 5)
     : Math.max(0, volume.value - 5)
 }
-
-// const sitesMap = {} as { [x in siteId]: number }
-// sites.forEach((site, index) => sitesMap[site.id] == index)
-// export { sitesMap }
+ 
 
 export function getFollows(site: siteId) {
   const val = localStorage.getItem('follows-' + site)
@@ -167,3 +166,5 @@ export const blockRegex = computed(() => {
 export const cookies = reactive(getItem('cookies',{} as Record<siteId,string|undefined>))
 
 watchEffect(()=>setItem('cookies',cookies) )
+
+export const active = ref(0)

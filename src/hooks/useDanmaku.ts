@@ -30,12 +30,9 @@ export class Danmaku {
   opacity!:number
   opacityStr!:string
   constructor(options: options) {
-
     this.isdraw = false
     this.textList = []
     this.canvas = options.canvas! 
-    
-    
     this.ctx = this.canvas.getContext('2d')!  
     this.speed = options.speed || 2 
     this.setFont(options.fontSize || 16)
@@ -77,6 +74,7 @@ export class Danmaku {
     this.isdraw = false
   }
   destory() {
+    this.lines = []
     this.clean()
   }
   add(value: string) {

@@ -1,12 +1,12 @@
 <script setup lang="ts"> 
 import type { onLoad } from '../components/list/type';
-import { cookies, sites } from '../store'
+import { cookies, sites,active, sitesArr } from '../store'
 
-
-const active = ref(0)
+ 
 const kw = ref('')
 const site = computed(() => sites[active.value])
 const status = ref<string>()
+
 const search = () => {
   if (!kw.value) return Promise.resolve()
   const search = site.value.search
@@ -42,6 +42,7 @@ const load: onLoad = (setStatus) => {
 // }
 
 const tabClick = (index: number) => {
+  router.push(`/${sitesArr[index]}/search`)
   if (goRoom()) return
   if (sites[index].search.page == 1) search()
 }

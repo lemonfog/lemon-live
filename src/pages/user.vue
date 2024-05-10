@@ -6,7 +6,7 @@
     <div text-lg p-2>开源
     </div>
     <div ml-4>
-      <a text-blue href="https://github.com/lemonfog/lemonlive">https://github.com/lemonfog/lemonlive</a>
+      <a text-blue target="_blank" href="https://github.com/lemonfog/lemon-live">https://github.com/lemonfog/lemon-live</a>
     </div>
 
     <div text-lg p-2>声明</div>

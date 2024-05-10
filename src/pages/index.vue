@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import type { onLoad } from '../components/list/type';
-import { cookies, sites } from '../store'
+import { cookies, sites,active } from '../store'
 
-const route = useRoute()
+// const route = useRoute()
 const router = useRouter()
 
-const active = ref((() => {
-  if (!route.query.site) return 0
-  const index = sites.findIndex(i => i.id == route.query.site)
-  return index == -1 ? 0 : index
-})())
+// const active = ref((() => {
+//   if (!route.query.site) return 0
+//   const index = sites.findIndex(i => i.id == route.query.site)
+//   return index == -1 ? 0 : index
+// })())
 
 const siteId = computed(() => sites[active.value].id)
 
-watch(siteId ,()=> router.push(`/?site=${siteId.value}`) )
-onActivated(()=> router.replace(`/?site=${siteId.value}`) )
+// watch(siteId ,()=> router.push(`/?site=${siteId.value}`) )
+// onActivated(()=> router.replace(`/?site=${siteId.value}`) )
 const load: onLoad = (setStatus) => {
   const recommend = sites[active.value].recommend
   useSiteFetch(siteId.value, 'getRecommendRooms', { page: recommend.page }).then(data => {
@@ -30,6 +30,7 @@ const load: onLoad = (setStatus) => {
 const isRefresh = ref(false)
 let active2 = 0
 const tabClick = () => {
+  router.push(`/${siteId.value}`)
   if (active2 != active.value) return active2 = active.value
   const recommend = sites[active.value].recommend
   isRefresh.value = true

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import danmakuIconOpen from '../assets/icons/danmaku_open.png'
 import danmakuIconClose from '../assets/icons/danmaku_close.png'
-import { sites, addFollow, removeFollow, volume, setVolume, brightness, dmSetting, colors, blockRegex, setItem } from '../store'
+import { sites, addFollow, removeFollow, volume, setVolume, brightness, dmSetting, colors, blockRegex, setItem, sitesArr } from '../store'
 import { Flv, Hls } from 'lemon-mse';
 import { isMobile } from '../hooks/useMouseTouch'
 import { ungzip } from 'pako'
@@ -184,6 +184,7 @@ let wsTimer: number
 
 const wsStart = () => {
   if (!room.value || ws || (!dmSetting.canvasOpen && !dmSetting.sideOpen)) return
+  let first = true
   if (room.value.siteId == 'huya') {
     const url = room.value?.ws
     if (!url) return
@@ -197,9 +198,12 @@ const wsStart = () => {
       wsTimer = setInterval(() => {
         ws!.send('ping')
       }, 45000)
-    }
-    ws.onmessage = (e) => { 
-      if (dmCount == 0) return addDm('系统', '弹幕服务器连接成功')
+    } 
+    ws.onmessage = (e) => {
+      if (first){
+        addDm('系统', '弹幕服务器连接成功')
+        return first = false
+      }
       const { sendNick, content } = JSON.parse(e.data).data
       addDm(sendNick, content)
       if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
@@ -222,8 +226,12 @@ const wsStart = () => {
         ws!.send(douyuEncode(`type@=mrkl/`))
       }, 45000)
     }
-    ws.onmessage = async ({ data }) => { 
-      if (dmCount == 0) addDm('系统', '弹幕服务器连接成功')
+
+    ws.onmessage = async ({ data }) => {
+      if (first) {
+        addDm('系统', '弹幕服务器连接成功')
+        first = false
+      } 
       const str = await data.text()
       const arr = str.split(/type@=chatmsg\//)
       arr.forEach((i: string) => {
@@ -254,8 +262,11 @@ const wsStart = () => {
         ws.send(encodePushFrame({ payloadType: 'bh' }))
       }, 10000)
     }
-    ws.onmessage = (e) => { 
-      if (dmCount == 0) addDm('系统', '弹幕服务器连接成功')
+    ws.onmessage = (e) => {
+      if (first) {
+        addDm('系统', '弹幕服务器连接成功')
+        first = false
+      } 
       const barrageDecode = decodePushFrame(new Uint8Array(e.data))
       const decompressed = ungzip(barrageDecode.payload!)
       const res = decodeResponse(new Uint8Array(decompressed))
@@ -273,7 +284,7 @@ const wsStart = () => {
     ws.onerror = () => {
       clearInterval(wsTimer)
       addDm('系统', '弹幕服务器连接失败')
-      addDm('系统','请允许第三方cookie 连接抖音弹幕必须')
+      addDm('系统', '请允许第三方cookie 连接抖音弹幕必须')
     }
   }
 
@@ -306,7 +317,11 @@ const wsClose = () => {
   // cvOb.unobserve(canvas.value)
 }
 watch(room, () => wsStart())
-watchEffect(() => {
+// watchEffect(() => {
+//   if (!dmSetting.sideOpen && !dmSetting.canvasOpen) wsClose()
+//   if (!ws) wsStart()
+// })
+watch([()=>dmSetting.sideOpen,()=>dmSetting.canvasOpen ],()=>{
   if (!dmSetting.sideOpen && !dmSetting.canvasOpen) wsClose()
   if (!ws) wsStart()
 })
@@ -439,7 +454,7 @@ onMounted(() => {
     document.exitPictureInPicture()
   }
   video.value.addEventListener('leavepictureinpicture', () => {
-    if (!route.path.startsWith('/play')) return router.push(fullPath)
+    if (!(/play/.test(route.path))) return router.push(fullPath)
     if (route.fullPath == fullPath) return state.pictureInPicture = false
     state[type.value]?.destroy()
   })
@@ -447,10 +462,11 @@ onMounted(() => {
 })
 let siteID = route.meta.site.id
 onBeforeRouteUpdate((to) => {
-  const { siteId, id } = to.params as any
-  const site = sites.find(i => i.id == siteId)
-  if (site == undefined) return false
-  to.meta.site = site
+  const { siteid, id } = to.params as any 
+  // const site = sites.find(i => i.id == siteId)
+  const index = sitesArr.findIndex(i => i == siteid)
+  if (index == -1) return { name: '404' }
+  to.meta.site = sites[index]
   to.meta.id = id
   if (type.value) {
     state[type.value]?.destroy()
@@ -461,19 +477,23 @@ onBeforeRouteUpdate((to) => {
   state.line = 0
   state.follow = false
   room.value = undefined
+  // wsClose()
+  // danmakuClean()
+  // dmk.value?.destory()
+  // siteID = route.meta.site.id
+  // fullPath = route.fullPath
+  // init()
   return true
-})
-watch(() => route.params, () => {
-
+}) 
+watch(() => route.params, () => { 
   wsClose()
   danmakuClean()
   dmk.value?.destory()
   siteID = route.meta.site.id
   fullPath = route.fullPath
   init()
-
 })
-
+ 
 onBeforeUnmount(remove)
 
 const refreshFollows = () => Promise.all(map(sites, useCheckFollows))
@@ -535,7 +555,7 @@ watch(brightness, () => {
       <div flex p-2 gap-4 text-lg>
         <div hover:text-amber @click="$router.back" class="i-ri-arrow-left-line"></div>
         <div hover:text-amber grow w-25 text-center truncate>{{ room?.title }}</div>
-        <div @click="info" hidden md:block :style="state.showInfo ? 'transform:rotate(180deg)' : ''"
+        <div @click="info" hidden lg:block :style="state.showInfo ? 'transform:rotate(180deg)' : ''"
           class="i-ri-arrow-right-s-line"></div>
       </div>
       <div ref="player" md:rounded-6px text-4 text-white @contextmenu.prevent="" bg-black cursor-default
@@ -605,9 +625,9 @@ watch(brightness, () => {
           </div>
         </Tab>
         <Tab title="关注" box-border px-4>
-          <router-link v-for="i in follows"
-            :class="{ 'text-amber': room?.siteId == i.siteId && room?.roomId == i.roomId }"
-            :key="`${i.siteId}/${i.roomId}`" :to="`/play/${i.siteId}/${i.roomId}`" flex items-center gap-2 py-2>
+          <router-link v-for="i in follows" 
+            :class="{ 'text-amber': room?.siteId== i.siteId && room?.roomId== i.roomId }"
+            :key="`${i.siteId}/${i.roomId}`" :to="`/${i.siteId}/play/${i.roomId}`" flex items-center gap-2 py-2>
             <img w-5 h-5 rounded-5 v-lazy="i.avatar" alt="">
             <div>{{ i.nickname }} </div>
             <div w-3 h-3 rounded-3 :class="[i.status ? 'bg-green' : 'bg-red']"></div>
