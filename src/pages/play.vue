@@ -552,10 +552,10 @@ watch(brightness, () => {
 <template>
   <div w-full h-full flex flex-col lg:flex-row box-border md:pb-2>
     <div lg:grow-5 flex flex-col>
-      <div flex p-2 gap-4 text-lg>
+      <div flex p-2 pt-1 gap-2 text-lg>
         <div hover:text-amber @click="$router.back" class="i-ri-arrow-left-line"></div>
-        <div hover:text-amber grow w-25 text-center truncate>{{ room?.title }}</div>
-        <div @click="info" hidden lg:block :style="state.showInfo ? 'transform:rotate(180deg)' : ''"
+        <div hover:text-amber grow w-25 box-border  text-center truncate text-4 md:text-5 pr-6 sm:pr-2 lg:pr-0>{{ room?.title }}</div>
+        <div @click="info" hidden lg:block :style="state.showInfo ? 'transform:rotate(180deg)' : 'margin-right:1.5rem'"
           class="i-ri-arrow-right-s-line"></div>
       </div>
       <div ref="player" md:rounded-6px text-4 text-white @contextmenu.prevent="" bg-black cursor-default

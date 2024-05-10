@@ -3,18 +3,19 @@ import { getItem, setItem, sitesArr, active } from './store';
 
 const navs = [
   {
-
-    icon: 'i-ri-heart-line',
-    link: '/follow'
-  },
-  {
     icon: 'i-ri-home-smile-line',
     link: '/'
   },
   {
     icon: 'i-ri-apps-2-line',
     link: '/category'
-  }, {
+  },
+  {
+
+    icon: 'i-ri-heart-line',
+    link: '/follow'
+  },
+  {
     icon: 'i-ri-search-line',
     link: '/search'
   }, {
@@ -48,10 +49,11 @@ watch(route, () => {
 </script>
 
 <template>
-  <iframe ref="iframe" v-if="!hasDouyinCookie" src="https://live.douyin.com" pos-absolute width="0" height="0" op-0
+  <iframe ref="iframe" v-if="!hasDouyinCookie" src="https://live.douyin.com" pos-absolute  width="0" height="0" op-0 b-0
     style="z-index: -10;"></iframe>
-  
-  <a href="https://github.com/lemonfog/lemon-live" target="_blank" pos-absolute top-4 right-4 class="i-ri-github-fill" z-10></a>
+
+  <a text-lg href="https://github.com/lemonfog/lemon-live" target="_blank" pos-absolute right-1 sm:right-2 md:right-4
+    top-3 class="i-ri-github-fill" z-10></a>
   <div text-sm pos-fixed bottom-0 left-0 right-0 md:py-2 b-t-solid b b-gray-7 md:b-r-solid md:top-0 md:right-auto flex
     justify-around md:flex-col md:justify-left bg-dark-7 z-10>
     <router-link v-for="i in navs" :to="i.link" hover:text-amber rounded-2 py-2 px-4 m-2
