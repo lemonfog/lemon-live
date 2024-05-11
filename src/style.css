@@ -57,7 +57,7 @@ button:hover {
 /** 滚动条样式 */
 .scrolly {
   box-sizing: border-box;
-  overflow-y: auto; 
+  overflow-y: auto;  
 }
 
 .scrolly::-webkit-scrollbar {
@@ -79,3 +79,9 @@ button:hover {
   border-radius: .4em;
 }
 
+.scrollx{
+  overflow-x: auto;
+}
+.scrollx::-webkit-scrollbar{
+  height: 0;
+}

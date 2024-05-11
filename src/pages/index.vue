@@ -47,7 +47,7 @@ const tabClick = () => {
 </script>
 
 <template>
-  <Tabs v-model:active="active" @tab-click="tabClick">
+  <Tabs v-model:active="active" @tab-click="tabClick" pt-1>
     <Tab v-for="site in sites" :key="site.id" :title="site.name" pos-relative>
       <!-- <div v-if="!site.recommend.list.value.length">
         没有数据

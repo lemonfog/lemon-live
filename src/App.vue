@@ -24,16 +24,17 @@ const navs = [
   }
 ]
 
-const hasDouyinCookie = ref(getItem('douyin-cookie', false))
-const iframe = ref<HTMLIFrameElement>()
+// const hasDouyinCookie = ref(getItem('douyin-cookie', false))
+const showIframe = ref(true)
 onMounted(() => {
   document.querySelector('main')!.style.height = `calc(${window.innerHeight}px - 3.5rem)`
-  if (!hasDouyinCookie.value) {
-    setTimeout(() => {
-      hasDouyinCookie.value = true
-      setItem('douyin-cookie', true)
-    }, 5000)
-  }
+  // if (!hasDouyinCookie.value) {
+  //   setTimeout(() => {
+  //     hasDouyinCookie.value = true
+  //     setItem('douyin-cookie', true)
+  //   }, 5000)
+  // }
+  setTimeout(() => showIframe.value = false, 5000)
 })
 
 const route = useRoute()
@@ -49,7 +50,7 @@ watch(route, () => {
 </script>
 
 <template>
-  <iframe ref="iframe" v-if="!hasDouyinCookie" src="https://live.douyin.com" pos-absolute  width="0" height="0" op-0 b-0
+  <iframe v-if="showIframe" src="https://live.douyin.com" pos-absolute width="0" height="0" op-0 b-0
     style="z-index: -10;"></iframe>
 
   <a text-lg href="https://github.com/lemonfog/lemon-live" target="_blank" pos-absolute right-1 sm:right-2 md:right-4
@@ -62,7 +63,7 @@ watch(route, () => {
     </router-link>
   </div>
 
-  <main class="md:!h-100vh" text-xs md:text-sm xl:text-base pt-2 box-border md:ml-17.5>
+  <main class="md:!h-100vh" pt-2 box-border md:ml-17.5>
     <div h-full class="scrolly" md:px-3>
       <router-view v-slot="{ Component }">
         <keep-alive :exclude="['play']">

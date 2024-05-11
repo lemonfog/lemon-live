@@ -25,7 +25,7 @@ deno + vite + vue
 
 ![](https://i0.hdslb.com/bfs/article/ddaa70bc70675e6c7817b6dd29e338af98845873.png@1e_1c.webp)
  
-## 赞助
+## 捐赠
 
 <div>
   <img height="300" style="margin-right:20px" src="https://i0.hdslb.com/bfs/article/828b4686d0bcd7a427939b1f121f322898845873.png@1e_1c.webp">
