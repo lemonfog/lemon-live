@@ -198,9 +198,9 @@ const wsStart = () => {
       wsTimer = setInterval(() => {
         ws!.send('ping')
       }, 45000)
-    } 
+    }
     ws.onmessage = (e) => {
-      if (first){
+      if (first) {
         addDm('系统', '弹幕服务器连接成功')
         return first = false
       }
@@ -231,7 +231,7 @@ const wsStart = () => {
       if (first) {
         addDm('系统', '弹幕服务器连接成功')
         first = false
-      } 
+      }
       const str = await data.text()
       const arr = str.split(/type@=chatmsg\//)
       arr.forEach((i: string) => {
@@ -266,7 +266,7 @@ const wsStart = () => {
       if (first) {
         addDm('系统', '弹幕服务器连接成功')
         first = false
-      } 
+      }
       const barrageDecode = decodePushFrame(new Uint8Array(e.data))
       const decompressed = ungzip(barrageDecode.payload!)
       const res = decodeResponse(new Uint8Array(decompressed))
@@ -321,7 +321,7 @@ watch(room, () => wsStart())
 //   if (!dmSetting.sideOpen && !dmSetting.canvasOpen) wsClose()
 //   if (!ws) wsStart()
 // })
-watch([()=>dmSetting.sideOpen,()=>dmSetting.canvasOpen ],()=>{
+watch([() => dmSetting.sideOpen, () => dmSetting.canvasOpen], () => {
   if (!dmSetting.sideOpen && !dmSetting.canvasOpen) wsClose()
   if (!ws) wsStart()
 })
@@ -462,7 +462,7 @@ onMounted(() => {
 })
 let siteID = route.meta.site.id
 onBeforeRouteUpdate((to) => {
-  const { siteid, id } = to.params as any 
+  const { siteid, id } = to.params as any
   // const site = sites.find(i => i.id == siteId)
   const index = sitesArr.findIndex(i => i == siteid)
   if (index == -1) return { name: '404' }
@@ -484,8 +484,8 @@ onBeforeRouteUpdate((to) => {
   // fullPath = route.fullPath
   // init()
   return true
-}) 
-watch(() => route.params, () => { 
+})
+watch(() => route.params, () => {
   wsClose()
   danmakuClean()
   dmk.value?.destory()
@@ -493,7 +493,7 @@ watch(() => route.params, () => {
   fullPath = route.fullPath
   init()
 })
- 
+
 onBeforeUnmount(remove)
 
 const refreshFollows = () => Promise.all(map(sites, useCheckFollows))
@@ -554,7 +554,8 @@ watch(brightness, () => {
     <div lg:grow-5 flex flex-col>
       <div flex p-2 pt-1 gap-2 text-lg>
         <div hover:text-amber @click="$router.back" class="i-ri-arrow-left-line"></div>
-        <div hover:text-amber grow w-25 box-border  text-center truncate text-4 md:text-5 pr-6 sm:pr-2 lg:pr-0>{{ room?.title }}</div>
+        <div hover:text-amber grow w-25 box-border text-center truncate text-4 md:text-5 pr-6 sm:pr-2 lg:pr-0>{{
+          room?.title }}</div>
         <div @click="info" hidden lg:block :style="state.showInfo ? 'transform:rotate(180deg)' : 'margin-right:1.5rem'"
           class="i-ri-arrow-right-s-line"></div>
       </div>
@@ -602,9 +603,9 @@ watch(brightness, () => {
       <div flex items-center line-height-none gap-4 b b-y-solid py-3 b-gray-7 px-4>
         <img :src="room?.avatar" w-8 h-8 alt="" rounded-4>
         <div grow-1 w-20>
-          <div truncate>{{ room?.nickname }}</div>
-          <div flex text-3 items-center gap-1>
-            <img w-5 h-5 :src="$route.meta.site.icon">
+          <div h-4 truncate>{{ room?.nickname }}</div>
+          <div h-4 flex text-3 items-center gap-1>
+            <img w-4 h-4 :src="$route.meta.site.icon">
             {{ $route.meta.site.name }}
           </div>
         </div>
@@ -625,8 +626,8 @@ watch(brightness, () => {
           </div>
         </Tab>
         <Tab title="关注" box-border px-4>
-          <router-link v-for="i in follows" 
-            :class="{ 'text-amber': room?.siteId== i.siteId && room?.roomId== i.roomId }"
+          <router-link v-for="i in follows"
+            :class="{ 'text-amber': room?.siteId == i.siteId && room?.roomId == i.roomId }"
             :key="`${i.siteId}/${i.roomId}`" :to="`/${i.siteId}/play/${i.roomId}`" flex items-center gap-2 py-2>
             <img w-5 h-5 rounded-5 v-lazy="i.avatar" alt="">
             <div>{{ i.nickname }} </div>

@@ -23,7 +23,7 @@ const tabs = computed(() => map(children, i => i.title))
 <template>
   <div class="h-full" box-border>
     <div w-full box-border text-sm sm:text-base>
-      <div flex p1 sm:gap-1  h-8 box-border lg:justify-center :class="[ children.length>5 ||grow ? '' :  justify,]" class="scrollx">
+      <div flex p1 sm:gap-1 text-center  h-8 box-border lg:justify-center :class="[ children.length>5 ||grow ? '' :  justify,]" class="scrollx">
         <div v-for="tab, index in tabs" px-1 sm:px-2  box-border shrink-0 rounded py-1 line-height-none text-centercursor-pointer hover:text-amber cursor-pointer
           :class="{ 'text-amber': active == index, 'grow': grow }" @click="click(index)">{{ tab }}</div>
       </div>

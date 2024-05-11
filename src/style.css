@@ -61,14 +61,14 @@ button:hover {
 }
 
 .scrolly::-webkit-scrollbar {
-  height: .4em;
-  width: .4em;
+  height: 4px;
+  width: 4px;
   background-color: transparent;
 }
 
 .scrolly::-webkit-scrollbar-thumb {
   background-color: #ffffff5f;
-  border-radius: .4em;
+  border-radius: 4px;
 }
 
 .scrolly::-webkit-scrollbar-thumb:hover {
@@ -76,7 +76,7 @@ button:hover {
 }
 
 .scrolly::-webkit-scrollbar-track {
-  border-radius: .4em;
+  border-radius: 4px;
 }
 
 .scrollx{
@@ -84,4 +84,5 @@ button:hover {
 }
 .scrollx::-webkit-scrollbar{
   height: 0;
+  width: 0;
 }
