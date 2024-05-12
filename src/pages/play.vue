@@ -380,14 +380,14 @@ const autoHide = () => {
     state.showController = false
   }, 3000)
 }
-// const webscreen = () => {
-//   clearTimeout(clickTimer)
-//   state.webscreen = !state.webscreen
-//   if (state.fullscreen) {
-//     state.fullscreen = false
-//     document.exitFullscreen()
-//   }
-// }
+const webscreen = () => {
+  clearTimeout(clickTimer)
+  state.webscreen = !state.webscreen
+  if (state.fullscreen) {
+    state.fullscreen = false
+    document.exitFullscreen()
+  }
+}
 
 const info = () => state.showInfo = !state.showInfo
 
@@ -547,17 +547,46 @@ watch(brightness, () => {
   setItem('brightness', brightness.value)
   noticeTimer = setTimeout(() => state.notice = null, 1000)
 })
+
+let followTimer: number 
+const followRoot = ref() as Ref<HTMLElement>
+const followClick = (e: any) => { 
+  clearTimeout(followTimer)
+  followTimer = setTimeout(() => { 
+    const id = getDataSet('id', e.target, followRoot.value)
+    if(!id) return 
+    const site = getDataSet('site',e.target,followRoot.value)
+    router.push(`/${site}/play/${id}`)
+  }, 300)
+}
+   
+const followDbClick = (e: any) => {
+  clearTimeout(followTimer)
+  const id = getDataSet('id', e.target, followRoot.value)
+  if(!id) return
+  const site = getDataSet('site',e.target,followRoot.value)
+  const url = `/${site}/play/${id}`  
+  window.open(url,'_blank')?.location
+} 
+const getDataSet = (key: string, el: HTMLElement, root: HTMLElement): any => {
+  if (el == root) return null
+  const value = el.dataset[key]
+  if (value) return value
+  return getDataSet(key, el.parentElement!, root)
+}
+
+
 </script>
 
 <template>
   <div w-full h-full flex flex-col lg:flex-row box-border md:pb-2>
     <div lg:grow-5 flex flex-col>
-      <div flex p-2 pt-1 gap-2 text-lg>
+      <div flex p-2 pt-1 gap-2 text-lg md:pr-3>
         <div hover:text-amber @click="$router.back" class="i-ri-arrow-left-line"></div>
         <div hover:text-amber grow w-25 box-border text-center truncate text-4 md:text-5 pr-6 sm:pr-2 lg:pr-0>{{
           room?.title }}</div>
         <div @click="info" hidden lg:block :style="state.showInfo ? 'transform:rotate(180deg)' : 'margin-right:1.5rem'"
-          class="i-ri-arrow-right-s-line"></div>
+          class="i-ri-arrow-right-s-fill"></div>
       </div>
       <div ref="player" md:rounded-6px text-4 text-white @contextmenu.prevent="" bg-black cursor-default
         :class="{ 'cursor-none': !(state.showController), 'text-5': state.fullscreen, 'text-5 !pos-fixed left-0 right-0 top-0 bottom-0 z-10 ': state.webscreen }"
@@ -590,7 +619,7 @@ watch(brightness, () => {
               :class="state.pictureInPicture ? 'i-ri-picture-in-picture-exit-line' : 'i-ri-picture-in-picture-2-line'">
             </div>
           </div>
-          <!-- <div hover:text-amber @click="webscreen" class="i-mdi-fit-to-screen"></div> -->
+          <div hover:text-amber @click="webscreen" class="i-mdi-fit-to-screen"></div>
           <div hover:text-amber @click="fullscreen"
             :class="state.fullscreen ? 'i-ri-fullscreen-exit-fill' : 'i-ri-fullscreen-fill'">
           </div>
@@ -620,20 +649,27 @@ watch(brightness, () => {
             <img w-1.5em cursor-pointer @click="() => dmSetting.sideOpen = !dmSetting.sideOpen"
               :src="dmSetting.sideOpen ? danmakuIconOpen : danmakuIconClose" />
             <div text-green-5 @click="danmakuClean" class="i-ri-delete-bin-3-line"></div>
+            <a text-green-5 :href="room?.url" target="_blank">
+              <div class="i-ri-link"></div>
+            </a> 
             <div v-show="showScrollBtn" @click="dmBottomBtn" text-green-5 class="i-ri-arrow-down-circle-line"> </div>
           </div>
           <div ref="dm" h-full pl-2 box-border class="scrolly">
           </div>
         </Tab>
         <Tab title="关注" box-border px-4>
-          <router-link v-for="i in follows"
-            :class="{ 'text-amber': room?.siteId == i.siteId && room?.roomId == i.roomId }"
-            :key="`${i.siteId}/${i.roomId}`" :to="`/${i.siteId}/play/${i.roomId}`" flex items-center gap-2 py-2>
-            <img w-5 h-5 rounded-5 v-lazy="i.avatar" alt="">
-            <div>{{ i.nickname }} </div>
-            <div w-3 h-3 rounded-3 :class="[i.status ? 'bg-green' : 'bg-red']"></div>
-            <div>{{ i.status ? '直播中' : '未开播' }}</div>
-          </router-link>
+          <div @click.prevent="followClick" @dblclick.prevent="followDbClick">
+            <a v-for="i in follows" @click=""
+              :data-id="room?.roomId" :data-site="room?.siteId"
+              :class="{ 'text-amber': room?.siteId == i.siteId && room?.roomId == i.roomId }"
+              :key="`${i.siteId}/${i.roomId}`" :href="`/${i.siteId}/play/${i.roomId}`" flex items-center gap-2 py-2>
+              <img w-5 h-5 rounded-5 v-lazy="i.avatar" alt="">
+              <div>{{ i.nickname }} </div>
+              <div w-3 h-3 rounded-3 :class="[i.status ? 'bg-green' : 'bg-red']"></div>
+              <div>{{ i.status ? '直播中' : '未开播' }}</div>
+          </a>
+          </div>
+
         </Tab>
         <Tab title="设置" px-2>
           <!-- <div w-full p-2 box-border> -->
