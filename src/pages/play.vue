@@ -659,8 +659,8 @@ const getDataSet = (key: string, el: HTMLElement, root: HTMLElement): any => {
         </Tab>
         <Tab title="关注" box-border px-4>
           <div @click.prevent="followClick" @dblclick.prevent="followDbClick">
-            <a v-for="i in follows" @click=""
-              :data-id="room?.roomId" :data-site="room?.siteId"
+            <a v-for="i in follows"
+              :data-id="i.roomId" :data-site="i.siteId"
               :class="{ 'text-amber': room?.siteId == i.siteId && room?.roomId == i.roomId }"
               :key="`${i.siteId}/${i.roomId}`" :href="`/${i.siteId}/play/${i.roomId}`" flex items-center gap-2 py-2>
               <img w-5 h-5 rounded-5 v-lazy="i.avatar" alt="">
