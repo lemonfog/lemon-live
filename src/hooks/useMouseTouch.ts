@@ -7,7 +7,7 @@ function _isMobile() {
 } 
 export const isMobile = _isMobile()
 // export const isMobile = 'ontouchstart' in document.documentElement
-export const mouseEvents = isMobile ? { start: 'touchstart', move: 'touchmove', end: 'touchend' } : { start: 'mousedown', move: 'mousemove', end: 'mouseup' }
+export const mouseEvents = (isMobile ? { start: 'touchstart', move: 'touchmove', end: 'touchend' } : { start: 'mousedown', move: 'mousemove', end: 'mouseup' }) as unknown as Record<string,'mouseup'>
 
 type type = keyof typeof mouseEvents 
 export const useMouseTouch = (target: Ref<HTMLElement | undefined>) => {

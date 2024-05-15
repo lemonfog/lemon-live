@@ -25,6 +25,7 @@ type State = {
   type: number,
   qn: number
   line: number,
+  muted: boolean,
   paused?: boolean,
   notice: string | null
   flv?: Flv,
@@ -48,6 +49,7 @@ const state = reactive<State>({
   line: 0,
   notice: null,
   paused: true,
+  muted: false,
   fullscreen: false,
   webscreen: false,
   showController: true,
@@ -443,7 +445,9 @@ init()
 const router = useRouter()
 let fullPath = route.fullPath
 onMounted(() => {
+  player.value.style.filter =brightness.value==100?'': `brightness(${brightness.value / 100})`
   video.value.volume = volume.value / 100
+  state.muted = video.value.muted
   video.value.addEventListener('canplay', () => { state.notice = null })
   if (!isMobile) {
     player.value.addEventListener('mousemove', autoHide)
@@ -534,40 +538,42 @@ watchEffect(() => {
 })
 
 watch(volume, () => {
+  autoHide()
   clearTimeout(noticeTimer)
   state.notice = `当前音量 ${volume.value}%`
   video.value.volume = volume.value / 100
   setItem('volume', volume.value)
-  noticeTimer = setTimeout(() => state.notice = null, 1000)
+  noticeTimer = setTimeout(() => state.notice = null, 2000)
 })
 watch(brightness, () => {
+  autoHide()
   clearTimeout(noticeTimer)
   state.notice = `当前亮度 ${brightness.value}%`
-  player.value.style.filter = `brightness(${brightness.value / 100})`
+  player.value.style.filter = brightness.value==100? '': `brightness(${brightness.value / 100})`
   setItem('brightness', brightness.value)
-  noticeTimer = setTimeout(() => state.notice = null, 1000)
+  noticeTimer = setTimeout(() => state.notice = null, 2000)
 })
 
-let followTimer: number 
+let followTimer: number
 const followRoot = ref() as Ref<HTMLElement>
-const followClick = (e: any) => { 
+const followClick = (e: any) => {
   clearTimeout(followTimer)
-  followTimer = setTimeout(() => { 
+  followTimer = setTimeout(() => {
     const id = getDataSet('id', e.target, followRoot.value)
-    if(!id) return 
-    const site = getDataSet('site',e.target,followRoot.value)
+    if (!id) return
+    const site = getDataSet('site', e.target, followRoot.value)
     router.push(`/${site}/play/${id}`)
   }, 300)
 }
-   
+
 const followDbClick = (e: any) => {
   clearTimeout(followTimer)
   const id = getDataSet('id', e.target, followRoot.value)
-  if(!id) return
-  const site = getDataSet('site',e.target,followRoot.value)
-  const url = `/${site}/play/${id}`  
-  window.open(url,'_blank')?.location
-} 
+  if (!id) return
+  const site = getDataSet('site', e.target, followRoot.value)
+  const url = `/${site}/play/${id}`
+  window.open(url, '_blank')?.location
+}
 const getDataSet = (key: string, el: HTMLElement, root: HTMLElement): any => {
   if (el == root) return null
   const value = el.dataset[key]
@@ -575,7 +581,22 @@ const getDataSet = (key: string, el: HTMLElement, root: HTMLElement): any => {
   return getDataSet(key, el.parentElement!, root)
 }
 
-
+const brightnessClick = () => brightness.value = 100
+watch(() => state.muted, () => {
+  autoHide()
+  clearTimeout(noticeTimer)
+  state.notice = state.muted ? '已静音' : '已开启声音'
+  noticeTimer = setTimeout(() => state.notice = null, 2000)
+})
+const volumeClick = () => {
+  if (video.value.muted) {
+    video.value.muted = false
+    state.muted = false
+    return
+  }
+  video.value.muted = true
+  state.muted = true
+}
 </script>
 
 <template>
@@ -624,6 +645,24 @@ const getDataSet = (key: string, el: HTMLElement, root: HTMLElement): any => {
             :class="state.fullscreen ? 'i-ri-fullscreen-exit-fill' : 'i-ri-fullscreen-fill'">
           </div>
         </div>
+        <div v-if="!isMobile">
+          <div @click.stop="" v-show="state.showController" pos-absolute
+            class="top-50% left-4 flex items-center flex-col" style="transform:translateY(-50%)" z-20>
+            <!-- <div class="i-ri-sun-fill"></div>  -->
+            <div>{{ brightness }}</div>
+            <Slider v-model:value="brightness" :max="200" :min="50"></Slider>
+            <div @click.stop="brightnessClick" class="i-ri-sun-line"></div>
+          </div>
+          <div @click.stop="" v-show="state.showController" pos-absolute
+            class="top-50% right-4  flex items-center flex-col" style="transform:translateY(-50%)" z-20>
+            <!-- <div class="i-ri-volume-down-fill"></div>  -->
+            {{ volume }}
+            <Slider v-model:value="volume" :max="100" :min="0"></Slider>
+            <div @click.stop="volumeClick" :class="state.muted ? 'i-ri-volume-mute-line' : 'i-ri-volume-down-line'">
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -651,7 +690,7 @@ const getDataSet = (key: string, el: HTMLElement, root: HTMLElement): any => {
             <div text-green-5 @click="danmakuClean" class="i-ri-delete-bin-3-line"></div>
             <a text-green-5 :href="room?.url" target="_blank">
               <div class="i-ri-link"></div>
-            </a> 
+            </a>
             <div v-show="showScrollBtn" @click="dmBottomBtn" text-green-5 class="i-ri-arrow-down-circle-line"> </div>
           </div>
           <div ref="dm" h-full pl-2 box-border class="scrolly">
@@ -659,15 +698,14 @@ const getDataSet = (key: string, el: HTMLElement, root: HTMLElement): any => {
         </Tab>
         <Tab title="关注" box-border px-4>
           <div @click.prevent="followClick" @dblclick.prevent="followDbClick">
-            <a v-for="i in follows"
-              :data-id="i.roomId" :data-site="i.siteId"
+            <a v-for="i in follows" :data-id="i.roomId" :data-site="i.siteId"
               :class="{ 'text-amber': room?.siteId == i.siteId && room?.roomId == i.roomId }"
               :key="`${i.siteId}/${i.roomId}`" :href="`/${i.siteId}/play/${i.roomId}`" flex items-center gap-2 py-2>
               <img w-5 h-5 rounded-5 v-lazy="i.avatar" alt="">
               <div>{{ i.nickname }} </div>
               <div w-3 h-3 rounded-3 :class="[i.status ? 'bg-green' : 'bg-red']"></div>
               <div>{{ i.status ? '直播中' : '未开播' }}</div>
-          </a>
+            </a>
           </div>
 
         </Tab>

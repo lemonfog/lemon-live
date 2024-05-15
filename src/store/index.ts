@@ -54,8 +54,8 @@ export const sites: site[] = [
 
 export const sitesArr = ['huya','douyu','douyin','bilibili','cc']
 
-export const volume = ref(getItem('volume', 70))
-export const brightness = ref(getItem('brightness', 50))
+export const volume = ref(getItem('volume', 100))
+export const brightness = ref(getItem('brightness', 100))
 
 export const setVolume = (isAdd: boolean) => {
   volume.value = isAdd ? Math.min(100, volume.value + 5)

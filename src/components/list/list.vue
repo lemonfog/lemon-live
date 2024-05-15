@@ -77,7 +77,7 @@ const reLoad = () => {
     <div v-if="status == 'finshed'" text-center>{{ props.finshedText }}</div>
     <div v-if="status == 'loaderror'" text-center cursor-pointer @click="reLoad">{{ props.errorText }}</div>
     
-    <div v-show="btnShow"  pos-sticky z-1 text-green p-1 @click="btnCilck"
+    <div id="goTop" v-show="btnShow"  pos-sticky z-1 text-green p-1 @click="btnCilck"
       class="i-ri-arrow-up-s-fill  bottom-8  left-[calc(100%-2rem)]"></div>
   </div>
 </template>

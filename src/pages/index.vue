@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { onLoad } from '../components/list/type';
-import { cookies, sites,active } from '../store'
+import { cookies, sites, active } from '../store'
 
 // const route = useRoute()
 const router = useRouter()
@@ -31,7 +31,8 @@ const isRefresh = ref(false)
 let active2 = 0
 const tabClick = () => {
   router.push(`/${siteId.value}`)
-  if (active2 != active.value) return active2 = active.value
+  if (active2 != active.value) return active2 = active.value;
+  (document.querySelector('#goTop') as HTMLDivElement).click()
   const recommend = sites[active.value].recommend
   isRefresh.value = true
   recommend.page = 1
@@ -40,7 +41,7 @@ const tabClick = () => {
     recommend.hasMore = data.hasMore
     recommend.page++
     if (!cookies[siteId.value]) cookies[siteId.value] = data.cookie
-  }).finally(() => isRefresh.value = false)
+  }).finally(() => setTimeout(() => isRefresh.value = false, 300))
 }
 
 

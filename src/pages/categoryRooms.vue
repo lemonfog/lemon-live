@@ -42,6 +42,7 @@ const load: onLoad = (setStatus) => {
 }
 const isRefresh = ref(false)
 const refresh = () => {
+  (document.querySelector('#goTop') as HTMLDivElement).click()
   isRefresh.value = true
   const { site, id } = route.meta
   useSiteFetch(site.id, 'getCategoryRooms', { id, pid: pid.value, page: state.page }).then(data => {
@@ -72,7 +73,7 @@ onActivated(function () {
     state.page = 1
     state.hasMore = true
   }
-}) 
+})  
 </script>
 
 <template>
@@ -82,7 +83,7 @@ onActivated(function () {
       <div grow text-center>
         <span hover:text-amber>{{ `${route.meta.site?.name} ${name == null ? '分区不存在' : name == '' ? '加载中' : name}` }}</span>
       </div>
-      <div mr-7  hover:text-amber @click="refresh" class="i-ri-refresh-line" :class="{ 'animate-spin': isRefresh }"></div>
+      <div mr-7 md:mr-24 hover:text-amber @click="refresh" class="i-ri-refresh-line" :class="{ 'animate-spin': isRefresh }"></div>
     </div>
     <div v-if="name" class="h-[calc(100%-3.25rem)] scrolly">
       <List :key="fullPath" @load="load">

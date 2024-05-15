@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { sitesArr, active } from './store';
+import { sitesArr, active, brightness } from './store';
 
 const navs = [
   {
@@ -35,6 +35,7 @@ onMounted(() => {
   //   }, 5000)
   // }
   setTimeout(() => showIframe.value = false, 5000)
+  if(isMobile) brightness.value = 100
 })
 
 const route = useRoute()
