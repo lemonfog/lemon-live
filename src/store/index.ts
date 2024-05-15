@@ -61,7 +61,11 @@ export const setVolume = (isAdd: boolean) => {
   volume.value = isAdd ? Math.min(100, volume.value + 5)
     : Math.max(0, volume.value - 5)
 }
- 
+
+export const setBrightness = (isAdd: boolean) => {
+  brightness.value = isAdd ? Math.min(200, brightness.value + 10)
+    : Math.max(50, brightness.value - 10)
+}
 
 export function getFollows(site: siteId) {
   const val = localStorage.getItem('follows-' + site)

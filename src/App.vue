@@ -34,8 +34,7 @@ onMounted(() => {
   //     setItem('douyin-cookie', true)
   //   }, 5000)
   // }
-  setTimeout(() => showIframe.value = false, 5000)
-  if(isMobile) brightness.value = 100
+  setTimeout(() => showIframe.value = false, 5000) 
 })
 
 const route = useRoute()

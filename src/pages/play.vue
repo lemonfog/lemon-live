@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import danmakuIconOpen from '../assets/icons/danmaku_open.png'
 import danmakuIconClose from '../assets/icons/danmaku_close.png'
-import { sites, addFollow, removeFollow, volume, setVolume, brightness, dmSetting, colors, blockRegex, setItem, sitesArr } from '../store'
+import { sites, addFollow, removeFollow, volume, setVolume, brightness, setBrightness, dmSetting, colors, blockRegex, setItem, sitesArr } from '../store'
 import { Flv, Hls } from 'lemon-mse';
 import { isMobile } from '../hooks/useMouseTouch'
 import { ungzip } from 'pako'
@@ -445,7 +445,7 @@ init()
 const router = useRouter()
 let fullPath = route.fullPath
 onMounted(() => {
-  player.value.style.filter =brightness.value==100?'': `brightness(${brightness.value / 100})`
+  player.value.style.filter = brightness.value == 100 ? '' : `brightness(${brightness.value / 100})`
   video.value.volume = volume.value / 100
   state.muted = video.value.muted
   video.value.addEventListener('canplay', () => { state.notice = null })
@@ -549,7 +549,7 @@ watch(brightness, () => {
   autoHide()
   clearTimeout(noticeTimer)
   state.notice = `当前亮度 ${brightness.value}%`
-  player.value.style.filter = brightness.value==100? '': `brightness(${brightness.value / 100})`
+  player.value.style.filter = brightness.value == 100 ? '' : `brightness(${brightness.value / 100})`
   setItem('brightness', brightness.value)
   noticeTimer = setTimeout(() => state.notice = null, 2000)
 })
@@ -597,6 +597,8 @@ const volumeClick = () => {
   video.value.muted = true
   state.muted = true
 }
+
+
 </script>
 
 <template>
@@ -620,8 +622,21 @@ const volumeClick = () => {
           <span>{{ state.notice }}</span>
         </div>
         <canvas ref="canvas" pos-absolute top-0 width="0" height="0" w-full h-full z-1></canvas>
-        <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-10 flex items-center
-          @click.stop="" :class="{ 'py-3': state.fullscreen || state.webscreen }" bg-black bg-op-30>
+        <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-20 flex items-center
+          @click.stop="" @dblclick.stop="" :class="{ 'py-3': state.fullscreen || state.webscreen }" bg-black bg-op-30>
+          <!-- <div flex justify-between items-center >
+            <div  @dblclick.stop="" class="flex items-center gap-4 p-1">
+              <div @click="setBrightness(false)" class="i-ri-sun-line"></div>
+              <div>{{ brightness }}</div>
+              <div @click="setBrightness(true)" class="i-ri-sun-fill"></div>
+            </div>
+            <div @dblclick.stop=""  class="flex items-center gap-4 p-1">
+              <div @click="setVolume(false)" class="i-ri-volume-down-fill"></div>
+              <div>{{ volume }}</div>
+              <div @click="setVolume(true)" class="i-ri-volume-up-fill"></div>
+            </div>
+          </div>                         -->
+          <!-- <div  flex items-center gap-3> -->
           <div @click="play" hover:text-amber :class="state.paused ? 'i-ri-play-large-fill' : 'i-ri-pause-large-fill'">
           </div>
           <!-- <div hover:text-amber @click="init" class="i-mdi-sync" style="transform:rotate(-45deg)"></div> -->
@@ -644,17 +659,36 @@ const volumeClick = () => {
           <div hover:text-amber @click="fullscreen"
             :class="state.fullscreen ? 'i-ri-fullscreen-exit-fill' : 'i-ri-fullscreen-fill'">
           </div>
+          <!-- </div> -->
+
         </div>
-        <div v-if="!isMobile">
-          <div @click.stop="" v-show="state.showController" pos-absolute
-            class="top-50% left-4 flex items-center flex-col" style="transform:translateY(-50%)" z-20>
+        <div v-if="isMobile" v-show="state.showController" :class="{ 'py-3': state.fullscreen || state.webscreen }" pos-absolute top-0
+          left-0 right-0 px-4 py-2 gap-3 z-20 flex justify-between bg-black bg-op-30 @click.stop="" @dblclick.stop="">
+          <div class="flex items-center gap-4 p-1">
+            <div @click="setBrightness(false)" class="i-ri-sun-line"></div>
+            <div>{{ brightness }}</div>
+            <div @click="setBrightness(true)" class="i-ri-sun-fill"></div>
+          </div>
+          <div flex-1 w-10 truncate text-center v-show="state.fullscreen">
+            {{ room?.title }}
+          </div> 
+          <div class="flex items-center gap-4 p-1">
+            <div @click="setVolume(false)" class="i-ri-volume-down-fill"></div>
+            <div>{{ volume }}</div>
+            <div @click="setVolume(true)" class="i-ri-volume-up-fill"></div>
+          </div>
+        </div>
+
+        <div v-else v-show="state.showController" h-0 w-0>
+          <div @click.stop="" @dblclick.stop="" pos-absolute class="top-50% left-4 flex items-center flex-col"
+            style="transform:translateY(-50%)" z-20>
             <!-- <div class="i-ri-sun-fill"></div>  -->
             <div>{{ brightness }}</div>
             <Slider v-model:value="brightness" :max="200" :min="50"></Slider>
             <div @click.stop="brightnessClick" class="i-ri-sun-line"></div>
           </div>
-          <div @click.stop="" v-show="state.showController" pos-absolute
-            class="top-50% right-4  flex items-center flex-col" style="transform:translateY(-50%)" z-20>
+          <div @click.stop="" @dblclick.stop="" pos-absolute class="top-50% right-4  flex items-center flex-col"
+            style="transform:translateY(-50%)" z-20>
             <!-- <div class="i-ri-volume-down-fill"></div>  -->
             {{ volume }}
             <Slider v-model:value="volume" :max="100" :min="0"></Slider>
@@ -662,6 +696,21 @@ const volumeClick = () => {
             </div>
           </div>
         </div>
+        <!-- <div v-else v-show="state.showController" h-0 w-0>
+          <div @click.stop="" @dblclick.stop=""  pos-absolute :class="state.fullscreen?'top-50%':'top-40%'" class="left-3 flex items-center flex-col gap-4 p-1" style="transform:translateY(-50%)"
+            z-20>
+            <div @click="setBrightness(true)" class="i-ri-sun-fill"></div>
+            <div>{{ brightness }}</div>
+            <div @click="setBrightness(false)" class="i-ri-sun-line"></div>
+          </div>
+          <div @click.stop="" @dblclick.stop=""  pos-absolute :class="state.fullscreen?'top-50% right-8%':'top-40% '" class="flex items-center flex-col gap-4 p-1" style="transform:translateY(-50%)"
+            z-20>
+            <div @click="setVolume(true)" class="i-ri-volume-up-fill"></div>
+            <div>{{ volume }}</div>
+            <div @click="setVolume(false)" class="i-ri-volume-down-fill"></div>
+          </div> >
+        </div> -->
+
 
       </div>
     </div>
