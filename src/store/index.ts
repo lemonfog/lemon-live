@@ -87,6 +87,13 @@ export function removeFollow(siteId: siteId, roomId: string) {
   return Reflect.has(site.follows, roomId)
 }
 
+export function removeAllFollow(){
+  sites.forEach(site=>{ 
+    for(const id in site.follows) delete site.follows[id] 
+    localStorage.removeItem('follows-'+site.id)
+  })
+}
+
 export async function getSubCategory(site: site, id: string) {
   const categories = site.categories
   if (!(categories.value.length)) {
