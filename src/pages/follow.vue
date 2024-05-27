@@ -64,6 +64,7 @@ const cover = () => {
   cloudFollows.value.forEach(i=> addFollow(i))
   synced() 
  }
+tabClick(0)
 </script>
 
 <template>
