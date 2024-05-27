@@ -103,7 +103,6 @@ watch(type, () => {
 
 
 const danmakuClean = () => {
-
   dm.value.scrollTop = 0
   scrolltop = 0
   dm.value.innerHTML = ''
@@ -140,6 +139,22 @@ const dmk = useDanmaku(canvas, {
 //   }, 100)
 // })
 
+const dmlist = [] as HTMLDivElement[]
+
+let dmTimer: number | undefined
+function renderDm() { 
+  if (dmTimer) return
+  dmTimer = setTimeout(() => {
+    let i = -1
+    const len = dmlist.length
+    while (++i < len) {
+      dm.value.appendChild(dmlist[i])
+    }
+    dmlist.length = 0
+    if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
+    dmTimer = undefined
+  }, 150)
+}
 
 const addDm = (nick: string, msg: string) => {
   dmCount++
@@ -157,8 +172,18 @@ const addDm = (nick: string, msg: string) => {
   n.style.fontSize = `${sideFontsize}px`
   if (sideColorOpen) n.style.color = colors[Math.floor(Math.random() * colors.length)]
 
-  n.innerHTML = `<span style="opacity:.5"> ${nick}：</span><span>${msg}</span>`
-  dm.value.appendChild(n)
+  const nickEl = document.createElement('span')
+  nickEl.style.opacity = '0.5'
+  nickEl.appendChild(document.createTextNode(nick))
+  const mshEl = document.createElement('span')
+  mshEl.appendChild(document.createTextNode(msg))
+  // n.innerHTML = `<span style="opacity:.5"> ${nick}：</span><span>${msg}</span>`
+  n.appendChild(nickEl)
+  n.appendChild(mshEl)
+  dmlist.push(n)
+  renderDm()
+  // dm.value.appendChild(n)
+  // if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
 }
 
 const dmOb = new ResizeObserver(() => {
@@ -208,7 +233,6 @@ const wsStart = () => {
       }
       const { sendNick, content } = JSON.parse(e.data).data
       addDm(sendNick, content)
-      if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
     }
     ws.onerror = () => {
       clearInterval(wsTimer)
@@ -240,7 +264,6 @@ const wsStart = () => {
         const m = i.match(/nn@=(.*)\/txt@=(.*)\/cid/)
         if (m == null) return
         addDm(m[1], m[2])
-        if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
       })
     }
     ws.onerror = () => {
@@ -281,7 +304,6 @@ const wsStart = () => {
         const res = decodeChatMessage(list[i].payload!)
         addDm(res.user!.nickName!, res.content!)
       }
-      if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
     }
     ws.onerror = () => {
       clearInterval(wsTimer)
@@ -312,7 +334,7 @@ const wsClose = () => {
   siteID == 'douyu' ? ws.send(douyuEncode('type@=logout')) : ws.close()
   ws = null
   dmCount = 0
-  if (dm.value) {
+  if (dm.value && fullPath == route.fullPath) {
     addDm('系统', '弹幕服务器断开连接')
   }
   dmOb.unobserve(dm.value)
@@ -339,7 +361,9 @@ const init = () => {
   clearInterval(wsTimer)
   clearTimeout(noticeTimer)
   state.notice = '加载中...'
-  nextTick(() => addDm('系统', '开始获取直播间信息'))
+  nextTick(() => {
+    addDm('系统', '开始获取直播间信息')
+  })
   useSiteFetch(site.id, 'getRoomDetail', { id }).then((data) => {
     room.value = data
     if (state.follow) addFollow(data)
@@ -433,6 +457,7 @@ const remove = () => {
   clearTimeout(clickTimer)
   clearTimeout(autoHideTimer)
   clearTimeout(noticeTimer)
+  clearTimeout(dmTimer)
   wsClose()
   document.removeEventListener('keydown', hotkey)
   if (type.value && !state.pictureInPicture) {
@@ -481,7 +506,6 @@ onBeforeRouteUpdate((to) => {
   state.line = 0
   state.follow = false
   room.value = undefined
-  // wsClose()
   // danmakuClean()
   // dmk.value?.destory()
   // siteID = route.meta.site.id
@@ -490,6 +514,7 @@ onBeforeRouteUpdate((to) => {
   return true
 })
 watch(() => route.params, () => {
+  clearTimeout(dmTimer)
   wsClose()
   danmakuClean()
   dmk.value?.destory()
@@ -662,8 +687,9 @@ const volumeClick = () => {
           <!-- </div> -->
 
         </div>
-        <div v-if="isMobile" v-show="state.showController" :class="{ 'py-3': state.fullscreen || state.webscreen }" pos-absolute top-0
-          left-0 right-0 px-4 py-2 gap-3 z-20 flex justify-between bg-black bg-op-30 @click.stop="" @dblclick.stop="">
+        <div v-if="isMobile" v-show="state.showController" :class="{ 'py-3': state.fullscreen || state.webscreen }"
+          pos-absolute top-0 left-0 right-0 px-4 py-2 gap-3 z-20 flex justify-between bg-black bg-op-30 @click.stop=""
+          @dblclick.stop="">
           <div class="flex items-center gap-4 p-1">
             <div @click="setBrightness(false)" class="i-ri-sun-line"></div>
             <div>{{ brightness }}</div>
@@ -671,7 +697,7 @@ const volumeClick = () => {
           </div>
           <div flex-1 w-10 truncate text-center v-show="state.fullscreen">
             {{ room?.title }}
-          </div> 
+          </div>
           <div class="flex items-center gap-4 p-1">
             <div @click="setVolume(false)" class="i-ri-volume-down-fill"></div>
             <div>{{ volume }}</div>
