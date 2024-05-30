@@ -106,12 +106,12 @@ const danmakuClean = () => {
   dm.value.scrollTop = 0
   scrolltop = 0
   dm.value.innerHTML = ''
-  showScrollBtn.value = false
-  dmOb.observe(dm.value)
+  // showScrollBtn.value = false
+  // dmOb.observe(dm.value)
 }
 let ws: WebSocket | null
 let dmCount = 0
-const showScrollBtn = ref(false)
+// const showScrollBtn = ref(false)
 
 let alwaysBottom = true
 const canvas = ref()
@@ -190,20 +190,20 @@ const addDm = (nick: string, msg: string) => {
   // if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
 }
 
-const dmOb = new ResizeObserver(() => {
-  if (dm.value.scrollHeight > dm.value.clientHeight) {
-    showScrollBtn.value = true
-    dmOb.unobserve(dm.value)
-    return
-  }
-  showScrollBtn.value = false
-})
+// const dmOb = new ResizeObserver(() => {
+//   if (dm.value.scrollHeight > dm.value.clientHeight) {
+//     showScrollBtn.value = true
+//     dmOb.unobserve(dm.value)
+//     return
+//   }
+//   showScrollBtn.value = false
+// })
 let scrolltop = 0
 const dmScroll = () => {
   if (dm.value.scrollTop >= scrolltop) return scrolltop = dm.value.scrollTop
   scrolltop = dm.value.scrollTop
   alwaysBottom = false
-  dmOb.unobserve(dm.value)
+  // dmOb.unobserve(dm.value)
   dm.value.removeEventListener('scroll', dmScroll)
 }
 const dmBottomBtn = () => {
@@ -223,7 +223,7 @@ const wsStart = () => {
     ws.onopen = () => {
       clearInterval(wsTimer)
       addDm('系统', '开始连接弹幕服务器')
-      dmOb.observe(dm.value)
+      // dmOb.observe(dm.value)
       dm.value.addEventListener('scroll', dmScroll)
       ws?.send(JSON.stringify({ command: "subscribeNotice", data: ["getMessageNotice"], reqId: Date.now().toString() }))
       wsTimer = setInterval(() => {
@@ -248,7 +248,7 @@ const wsStart = () => {
     ws.onopen = () => {
       clearInterval(wsTimer)
       addDm('系统', '开始连接弹幕服务器')
-      dmOb.observe(dm.value)
+      // dmOb.observe(dm.value)
       dm.value.addEventListener('scroll', dmScroll)
       ws!.send(douyuEncode(`type@=loginreq/roomid@=${room.value?.roomId}`))
       ws!.send(douyuEncode(`type@=joingroup/rid@=${room.value?.roomId}/gid@=-9999`))
@@ -284,7 +284,7 @@ const wsStart = () => {
     ws.onopen = () => {
       clearInterval(wsTimer)
       addDm('系统', '开始连接弹幕服务器')
-      dmOb.observe(dm.value)
+      // dmOb.observe(dm.value)
       dm.value.addEventListener('scroll', dmScroll)
       wsTimer = setInterval(() => {
         if (ws?.readyState != 1) return
@@ -341,7 +341,7 @@ const wsClose = () => {
   if (dm.value && fullPath == route.fullPath) {
     addDm('系统', '弹幕服务器断开连接')
   }
-  dmOb.unobserve(dm.value)
+  // dmOb.unobserve(dm.value)
   // cvOb.unobserve(canvas.value)
 }
 watch(room, () => wsStart())
@@ -770,7 +770,8 @@ const volumeClick = () => {
             <a text-green-5 :href="room?.url" target="_blank">
               <div class="i-ri-link"></div>
             </a>
-            <div v-show="showScrollBtn" @click="dmBottomBtn" text-green-5 class="i-ri-arrow-down-circle-line"> </div>
+            <!-- <div v-show="showScrollBtn" @click="dmBottomBtn" text-green-5 class="i-ri-arrow-down-circle-line"> </div> -->
+            <div @click="dmBottomBtn" text-green-5 class="i-ri-arrow-down-circle-line"> </div>
           </div>
           <div ref="dm" h-full pl-2 box-border class="scrolly">
           </div>
