@@ -142,18 +142,22 @@ const dmk = useDanmaku(canvas, {
 const dmlist = [] as HTMLDivElement[]
 
 let dmTimer: number | undefined
-function renderDm() { 
+function renderDm() {
   if (dmTimer) return
   dmTimer = setTimeout(() => {
     let i = -1
-    const len = dmlist.length
+    // const len = dmlist.length
+    const len = dmlist.length > 5 ? 5 : dmlist.length
+    dm.value.style.display = 'none'
     while (++i < len) {
       dm.value.appendChild(dmlist[i])
     }
-    dmlist.length = 0
+    dm.value.style.display = 'block'
+    // dmlist.length = 0
+    dmlist.splice(0, 5)
     if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
     dmTimer = undefined
-  }, 150)
+  }, 200)
 }
 
 const addDm = (nick: string, msg: string) => {
