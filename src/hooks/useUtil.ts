@@ -35,3 +35,24 @@ export const hasScrollY = (el: HTMLElement) => {
   el.scrollTop = 0
   return result
 }
+
+export const asyncPool = async (arr: any[], limit: number, iteratorFn: (item:any)=>any) => {
+  const resultList = [];
+  const executing: any[] = [];
+  for (const item of arr) { 
+    const p = Promise.resolve().then(() => { 
+      return iteratorFn(item);
+    });
+    resultList.push(p);
+    if (limit <= arr.length) {
+      const e: any = p.then(() => {
+        return executing.splice(executing.indexOf(e), 1);
+      });
+      executing.push(e);
+      if (executing.length >= limit) { 
+        await Promise.race(executing);
+      }
+    }
+  }
+  return Promise.all(resultList);
+};

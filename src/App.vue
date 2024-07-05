@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { sitesArr, active, brightness } from './store';
+import { sitesArr, active } from './store';
 
 const navs = [
   {

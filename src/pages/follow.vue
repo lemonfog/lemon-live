@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onLoad } from '../components/list/type';
 import { addFollow, removeAllFollow, sites } from '../store'
 const follows = map(sites, site => ({
   name: site.name,
@@ -7,10 +8,14 @@ const follows = map(sites, site => ({
 
 follows.unshift({ name: '全部', list: computed(() => sites.map(site => Object.values(site.follows) as LiveRoomItem[]).flat().sort(i => i.status ? -1 : 0)) })
 
-const tabClick = (index: number) => {
+const active = ref(0)
+const refresh = () => {
+  if (isRefresh.value) return
+  const index = active.value
   isRefresh.value = true
   index == 0 ? Promise.all(map(sites, useCheckFollows)).finally(refreshed) : useCheckFollows(sites[index - 1])?.finally(refreshed)
 }
+
 const refreshed = () => setTimeout(() => isRefresh.value = false, 300)
 // const fixFollow = () => {
 //   const follows = { huya: {}, douyu: {}, douyin: {}, bilibili: {}, cc: {} } as any
@@ -47,31 +52,46 @@ const pull = () => {
   if (syncIng.value) return
   if (!/^\d{4}$/.test(key.value)) return key.value = ''
   syncIng.value = true
-  useSyncPull(key.value).then(data => { 
-    cloudFollows.value = data 
+  useSyncPull(key.value).then(data => {
+    cloudFollows.value = data
   }).finally(synced)
 }
-const merge = () => { 
+const merge = () => {
   if (syncIng.value) return
   syncIng.value = true
-  cloudFollows.value.forEach(i=> addFollow(i))
+  if (key.value.startsWith('[')) {
+    try {
+      const list = JSON.parse(key.value)
+      foreach(list, (i: any) => {
+        if (!/^\d+$/.test(i.roomId)) return
+        addFollow({ siteId: i.siteId, roomId: i.roomId, cover: i.face, nickname: i.userName } as LiveRoomItem)
+      })
+    } catch (error) {
+      key.value = '合并失败'
+    }
+    return synced()
+  }
+  cloudFollows.value.forEach(i => addFollow(i))
   synced()
 }
 const cover = () => {
-  if (syncIng.value) return 
+  if (syncIng.value) return
   syncIng.value = true
-  removeAllFollow() 
-  cloudFollows.value.forEach(i=> addFollow(i))
-  synced() 
- }
-tabClick(0)
+  removeAllFollow()
+  cloudFollows.value.forEach(i => addFollow(i))
+  synced()
+}
+refresh()
+
+const load: onLoad = (setStatus) => setStatus('finshed')
 </script>
 
 <template>
   <div flex items-center>
     <div grow-1 justify-center gap-2 p-2 flex>
-      <div pos-relative>关注用户
+      <div pos-relative flex gap-2>关注用户
         <button class=" bg-green-5 rounded border-none cursor-pointer" @click="show = true">同步</button>
+        <button class=" bg-green-5 rounded border-none cursor-pointer" @click="refresh">刷新</button>
         <div v-show="isRefresh" pos-absolute top-0 right-0 style="transform:translateX(150%)" rounded-6 bg-white shadow
           text-amber>
           <div class="i-ri-refresh-line animate-spin"></div>
@@ -112,10 +132,12 @@ tabClick(0)
 
   </div>
   <div class="h-[calc(100%-3rem)]">
-    <Tabs @tab-click="tabClick">
+    <Tabs v-model:active="active">
       <tab v-for="site in follows" :title="site.name">
         <!-- <Follows :list="site.list"></Follows> -->
-        <Rooms :list="site.list"></Rooms>
+        <List @load="load" :finshed-text="''">
+          <Rooms :list="site.list"></Rooms>
+        </List>
       </tab>
     </Tabs>
   </div>

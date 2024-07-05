@@ -178,7 +178,7 @@ const addDm = (nick: string, msg: string) => {
 
   const nickEl = document.createElement('span')
   nickEl.style.opacity = '0.5'
-  nickEl.appendChild(document.createTextNode(nick))
+  nickEl.appendChild(document.createTextNode(nick+"："))
   const mshEl = document.createElement('span')
   mshEl.appendChild(document.createTextNode(msg))
   // n.innerHTML = `<span style="opacity:.5"> ${nick}：</span><span>${msg}</span>`
@@ -277,13 +277,23 @@ const wsStart = () => {
 
   }
   else if (room.value.siteId == 'douyin') {
-    const url = room.value?.ws
+    // wss://webcast5-ws-web-hl.douyin.com/webcast/im/pus…8510455589&heartbeatDuration=0&signature=00000000
+    const url="wss://webcast5-ws-web-lf.douyin.com/webcast/im/push/v2/?version_code=180800&webcast_sdk_version=1.0.14-beta.0&compress=gzip&live_id=1&did_rule=3&user_unique_id=7384097741553190409&im_path=/webcast/im/fetch/&identity=audience&need_persist_msg_count=15&insert_task_id=&live_reason=&room_id=7384052918510455589&heartbeatDuration=0&signature=00000000"
+    // const url="//webcast5-ws-web-hl.douyin.com/webcast/im/push/v2/?app_name=douyin_web&version_code=180800&webcast_sdk_version=1.0.14-beta.0&update_version_code=1.0.14-beta.0&compress=gzip&device_platform=web&cookie_enabled=true&screen_width=1920&screen_height=1080&browser_language=zh-CN&browser_platform=Win32&browser_name=Mozilla&browser_version=5.0%20(Windows%20NT%2010.0;%20Win64;%20x64)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/126.0.0.0%20Safari/537.36%20Edg/126.0.0.0&browser_online=true&tz_name=Asia/Shanghai&cursor=h-1_t-1719243793460_r-1_d-1_u-1&internal_ext=internal_src:dim|wss_push_room_id:7384052918510455589|wss_push_did:7373659956703594020|first_req_ms:1719243793394|fetch_time:1719243793460|seq:1|wss_info:0-1719243793460-0-0|wrds_v:7384095851901098321&host=https://live.douyin.com&aid=6383&live_id=1&did_rule=3&endpoint=live_pc&support_wrds=1&user_unique_id=7373659956703594020&im_path=/webcast/im/fetch/&identity=audience&need_persist_msg_count=15&insert_task_id=&live_reason=&room_id=7384052918510455589&heartbeatDuration=0&signature=6KVCZRQfORlwpZfm"
+    const urll=`ws://webcast5-ws-web-lf.douyin.com/webcast/im/push/v2/?app_name=douyin_web&version_code=180800
+    &webcast_sdk_version=1.0.14-beta.0&update_version_code=1.0.14-beta.0
+    &compress=gzip&device_platform=web&cookie_enabled=true&screen_width=1920&screen_height=1080&browser_language=zh-CN&browser_platform=Win32&browser_name=Mozilla&browser_version=5.0%20(Windows%20NT%2010.0;%20Win64;%20x64)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/126.0.0.0%20Safari/537.36%20Edg/126.0.0.0&browser_online=true&tz_name=Asia/Shanghai
+    &cursor=u-1_fh-7384100491547939866_t-1719245562274_r-1_d-1&internal_ext=internal_src:dim|wss_push_room_id:7384097328880913206|wss_push_did:7373659956703594020|first_req_ms:1719245562172|fetch_time:1719245562274|seq:1|wss_info:0-1719245562274-0-0|wrds_v:7384103462583141323
+    &host=https://live.douyin.com&aid=6383&live_id=1&did_rule=3&endpoint=live_pc&support_wrds=1&user_unique_id=7373659956703594020&im_path=/webcast/im/fetch/&identity=audience&need_persist_msg_count=15&insert_task_id=&live_reason=&room_id=7384097328880913206&heartbeatDuration=0
+    &signature=fdp6afFS7LjOqADS`
+    console.log(urll)
     if (!url) return
     ws = new WebSocket(url)
     ws.binaryType = 'arraybuffer'
     ws.onopen = () => {
       clearInterval(wsTimer)
       addDm('系统', '开始连接弹幕服务器')
+      console.log(ws)
       // dmOb.observe(dm.value)
       dm.value.addEventListener('scroll', dmScroll)
       wsTimer = setInterval(() => {
@@ -309,7 +319,8 @@ const wsStart = () => {
         addDm(res.user!.nickName!, res.content!)
       }
     }
-    ws.onerror = () => {
+    ws.onerror = function(){
+      console.log(this)
       clearInterval(wsTimer)
       addDm('系统', '弹幕服务器连接失败')
       addDm('系统', '请允许第三方cookie 连接抖音弹幕必须')
@@ -373,6 +384,7 @@ const init = () => {
     if (state.follow) addFollow(data)
     nextTick(() => addDm('系统', '直播间信息获取成功'))
     if (!data.status) return state.notice = '未开播！'
+    document.title=room.value!.title
 
   }, (msg) => {
     state.notice = msg

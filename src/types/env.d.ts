@@ -51,6 +51,7 @@ declare global {
     cdn?: string; // 斗鱼 ws-h5(scdncmccjisszidc) hs-h5 tct-h5 tctc-h5 虎牙 AL TX HW HY
     streamOther?: any; // 获取直链可复用参数
     cookie?:string
+    token?:string
   };
   /** 站点实例 */
   type LiveSite = Expand<{
