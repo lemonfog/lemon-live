@@ -6,13 +6,6 @@
 
 deno + vite + vue
 
-
-## deploy
-https://www.123pan.com/s/RuhtVv-NgDA3.html
-```sh
-npx vite build
-```
-
 ## 声明
 本项目的所有功能都是基于互联网上公开的资料开发，无任何破解、逆向工程等行为。
 
