@@ -1,6 +1,6 @@
 import { cookies } from "../store"
 
-const baseUrl = 'https://khfgytdgg.deno.dev/api/'
+const baseUrl = 'https://lemonlive-27.deno.dev/api/'
 const baseUrlSync = 'https://lemonlive.deno.dev/api/'
 // const baseUrl = 'http://localhost:8000/api/'
 
