@@ -2,6 +2,9 @@
  
 [https://lemonlive.deno.dev](https://lemonlive.deno.dev)
 
+**临时域名**
+[https://lemonlive520.deno.dev](https://lemonlive520.deno.dev)
+
 虎牙直播、斗鱼直播、抖音直播、哔哩直播、CC直播
 
 deno + vite + vue
