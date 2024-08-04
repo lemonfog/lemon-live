@@ -3,7 +3,8 @@
 [https://lemonlive.deno.dev](https://lemonlive.deno.dev)
 
 **临时域名**
-[https://lemonlive520.deno.dev](https://lemonlive520.deno.dev)
+[https://lemonlive.pages.dev](https://lemonlive.pages.dev)
+**不支持同步 部分地区加载慢或无法打开**
 
 虎牙直播、斗鱼直播、抖音直播、哔哩直播、CC直播
 
