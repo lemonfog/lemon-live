@@ -5,19 +5,6 @@ import { sites, addFollow, removeFollow, volume, setVolume, brightness, setBrigh
 import { Flv, Hls } from 'lemon-mse';
 import { isMobile } from '../hooks/useMouseTouch' 
 
-// definePage({
-//   path: '/play/:siteId/:id', 
-//   beforeEnter: async (to) => {
-//     const sites = await (await import('../store')).sites
-//     const { siteId, id } = to.params
-//     const site = sites.find(i => i.id == siteId)
-//     if (site == undefined) return false
-//     to.meta.site = site
-//     // @ts-ignore
-//     to.meta.id = id
-//     return true
-//   }
-// })
 type State = {
   follow: boolean,
   type: number,
@@ -99,43 +86,7 @@ watch(type, () => {
   state.flv = undefined
 })
 
-
-const danmakuClean = () => {
-  dm.value.scrollTop = 0
-  scrolltop = 0
-  dm.value.innerHTML = ''
-  // showScrollBtn.value = false
-  // dmOb.observe(dm.value)
-}
-let ws: WebSocket | null
-let dmCount = 0
-// const showScrollBtn = ref(false)
-
-let alwaysBottom = true
-const canvas = ref()
-const dmk = useDanmaku(canvas, {
-  gap: dmSetting.canvasGap,
-  rows: dmSetting.canvasRows,
-  speed: dmSetting.canvasSpeed,
-  opacity: dmSetting.canvasOpacity,
-  colors: dmSetting.canvasColorOpen ? dmSetting.colors : ['#ffffff']
-})
-// let cvTimer: number
-// let cvOb = new ResizeObserver((entries) => {
-//   clearTimeout(cvTimer)
-//   const cv = entries[0]
-//   cvTimer = setTimeout(() => {
-//     if (!canvas.value || !dmk.value) return
-//     canvas.value.width = cv.contentRect.width
-//     canvas.value.height = cv.contentRect.height
-//     let a = canvas.value.width / 50 | 0
-//     a = Math.max(13, Math.min(a, 32))
-//     dmk.value.setFont(a)
-//     dmk.value.setGap(a * 0.7)
-//     dmk.value.setSpeed(Math.max(2, a / 5))
-//     dmk.value.resize()
-//   }, 100)
-// })
+ 
 
 const dmlist = [] as HTMLDivElement[]
 
