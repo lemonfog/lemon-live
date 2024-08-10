@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import danmakuIconOpen from '../assets/icons/danmaku_open.png'
 import danmakuIconClose from '../assets/icons/danmaku_close.png'
-import { addFollow, removeFollow, volume, setVolume, brightness, setBrightness, dmSetting,setItem} from '../store'
+import { addFollow, removeFollow, volume, setVolume, brightness, setBrightness,setItem} from '../store'
 import { Flv, Hls } from 'lemon-mse';
 import { isMobile } from '../hooks/useMouseTouch' 
 
@@ -295,9 +295,6 @@ const volumeClick = () => {
 
           <div hover:text-amber @click="follow" :class="state.follow ? 'i-ri-heart-fill' : 'i-ri-heart-line'"></div>
           <div hover:text-amber @click="init" class="i-ri-refresh-line"></div>
-          <img w-1.5em cursor-pointer @click="() => dmSetting.canvasOpen = !dmSetting.canvasOpen"
-            :src="dmSetting.canvasOpen ? danmakuIconOpen : danmakuIconClose" />
-
           <div grow></div>
           <div v-if="types.length">
             <Select v-model:active="state.type" :list="types" />

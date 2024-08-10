@@ -34,16 +34,8 @@ const load: onLoad = (setStatus) => {
     if (!search.hasMore) return setStatus('finshed')
     search.page += 1
     setStatus('normal')
-  }, msg => {
-    // console.log(msg);
-    setStatus('loaderror')
-  })
-}
-
-// const refresh: onRefresh = async (ok) => {
-//   search().finally(ok)
-// }
-
+  }, ()=> setStatus('loaderror'))
+} 
 const tabClick = (index: number) => {
   router.push(`/${sitesArr[index]}/search`)
   if (goRoom()) return

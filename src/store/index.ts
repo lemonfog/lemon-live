@@ -51,7 +51,8 @@ export const sites: site[] = [
     follows: reactive(getFollows('cc')),
   },
 ]
- 
+
+export const sitesArr = ['huya','douyu','douyin','bilibili','cc']
 
 export const volume = ref(getItem('volume', 100))
 export const brightness = ref(getItem('brightness', 100))
@@ -114,6 +115,9 @@ export function getItem<T>(key: string, initValue: T): T {
 export function setItem(key: string, data: any) {
   localStorage.setItem(key, JSON.stringify(data))
 }
-  
+
+export const cookies = reactive(getItem('cookies',{} as Record<siteId,string|undefined>))
+
+watchEffect(()=>setItem('cookies',cookies) )
 
 export const active = ref(0)
