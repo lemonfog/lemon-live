@@ -1,6 +1,4 @@
-<script setup lang="ts">
-import danmakuIconOpen from '../assets/icons/danmaku_open.png'
-import danmakuIconClose from '../assets/icons/danmaku_close.png'
+<script setup lang="ts"> 
 import { addFollow, removeFollow, volume, setVolume, brightness, setBrightness,setItem} from '../store'
 import { Flv, Hls } from 'lemon-mse';
 import { isMobile } from '../hooks/useMouseTouch' 
@@ -141,8 +139,6 @@ const webscreen = () => {
   }
 }
 
-const info = () => state.showInfo = !state.showInfo
-
 const playEvent = () => {
   state.paused = false
   autoHide()
@@ -259,9 +255,7 @@ const volumeClick = () => {
       <div flex p-2 pt-1 gap-2 text-lg md:pr-3>
         <div hover:text-amber @click="$router.back" class="i-ri-arrow-left-line"></div>
         <div hover:text-amber grow w-25 box-border text-center truncate text-4 md:text-5 pr-6 sm:pr-2 lg:pr-0>{{
-          room?.title }}</div>
-        <div @click="info" hidden lg:block :style="state.showInfo ? 'transform:rotate(180deg)' : 'margin-right:1.5rem'"
-          class="i-ri-arrow-right-s-fill"></div>
+          room?.title }}</div> 
       </div>
       <div ref="player" md:rounded-6px text-4 text-white @contextmenu.prevent="" bg-black cursor-default
         :class="{ 'cursor-none': !(state.showController), 'text-5': state.fullscreen, 'text-5 !pos-fixed left-0 right-0 top-0 bottom-0 z-10 ': state.webscreen }"
@@ -276,23 +270,8 @@ const volumeClick = () => {
         <canvas ref="canvas" pos-absolute top-0 width="0" height="0" w-full h-full z-1></canvas>
         <div v-show="state.showController" pos-absolute bottom-0 left-0 right-0 px-4 py-2 gap-3 z-20 flex items-center
           @click.stop="" @dblclick.stop="" :class="{ 'py-3': state.fullscreen || state.webscreen }" bg-black bg-op-30>
-          <!-- <div flex justify-between items-center >
-            <div  @dblclick.stop="" class="flex items-center gap-4 p-1">
-              <div @click="setBrightness(false)" class="i-ri-sun-line"></div>
-              <div>{{ brightness }}</div>
-              <div @click="setBrightness(true)" class="i-ri-sun-fill"></div>
-            </div>
-            <div @dblclick.stop=""  class="flex items-center gap-4 p-1">
-              <div @click="setVolume(false)" class="i-ri-volume-down-fill"></div>
-              <div>{{ volume }}</div>
-              <div @click="setVolume(true)" class="i-ri-volume-up-fill"></div>
-            </div>
-          </div>                         -->
-          <!-- <div  flex items-center gap-3> -->
           <div @click="play" hover:text-amber :class="state.paused ? 'i-ri-play-large-fill' : 'i-ri-pause-large-fill'">
-          </div>
-          <!-- <div hover:text-amber @click="init" class="i-mdi-sync" style="transform:rotate(-45deg)"></div> -->
-
+          </div> 
           <div hover:text-amber @click="follow" :class="state.follow ? 'i-ri-heart-fill' : 'i-ri-heart-line'"></div>
           <div hover:text-amber @click="init" class="i-ri-refresh-line"></div>
           <div grow></div>
@@ -307,8 +286,7 @@ const volumeClick = () => {
           <div hover:text-amber @click="webscreen" class="i-mdi-fit-to-screen"></div>
           <div hover:text-amber @click="fullscreen"
             :class="state.fullscreen ? 'i-ri-fullscreen-exit-fill' : 'i-ri-fullscreen-fill'">
-          </div>
-          <!-- </div> -->
+          </div> 
 
         </div>
         <div v-if="isMobile" v-show="state.showController" :class="{ 'py-3': state.fullscreen || state.webscreen }"
@@ -331,15 +309,13 @@ const volumeClick = () => {
 
         <div v-else v-show="state.showController" h-0 w-0>
           <div @click.stop="" @dblclick.stop="" pos-absolute class="top-50% left-4 flex items-center flex-col"
-            style="transform:translateY(-50%)" z-20>
-            <!-- <div class="i-ri-sun-fill"></div>  -->
+            style="transform:translateY(-50%)" z-20> 
             <div>{{ brightness }}</div>
             <Slider v-model:value="brightness" :max="200" :min="50"></Slider>
             <div @click.stop="brightnessClick" class="i-ri-sun-line"></div>
           </div>
           <div @click.stop="" @dblclick.stop="" pos-absolute class="top-50% right-4  flex items-center flex-col"
-            style="transform:translateY(-50%)" z-20>
-            <!-- <div class="i-ri-volume-down-fill"></div>  -->
+            style="transform:translateY(-50%)" z-20> 
             {{ volume }}
             <Slider v-model:value="volume" :max="100" :min="0"></Slider>
             <div @click.stop="volumeClick" :class="state.muted ? 'i-ri-volume-mute-line' : 'i-ri-volume-down-line'">
