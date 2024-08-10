@@ -1,4 +1,4 @@
-import { defineConfig, presetUno, presetIcons, presetAttributify, transformerDirectives } from 'unocss'
+import { defineConfig, presetUno, presetIcons, presetAttributify } from 'unocss'
 
 
 export default defineConfig({
@@ -8,9 +8,7 @@ export default defineConfig({
     }),
     presetAttributify(),
     presetIcons({
-      collections: {
-        // heroicons:()=>import('@iconify-json/heroicons/icons.json').then(i=>i.default), 
-        // mdi:()=>import('@iconify-json/mdi/icons.json').then(i=>i.default),
+      collections: { 
         ri: () => import('@iconify-json/ri/icons.json').then(i => i.default),
       },
       scale: 1.5,
@@ -23,16 +21,9 @@ export default defineConfig({
   ],
   content: {
     pipeline: {
-      include: [
-        // the default
-        ///\.(vue|svelte|[jt]sx|mdx?|astro|elm|php|phtml|html)($|\?)/,
-        // include js/ts files
-        //'src/**/*.{js,ts}',
-        // 'src/components/*.vue',
-        // 'src/pages/*.vue',
+      include: [ 
         /\.vue($|\?)/,
-        'src/components/*',
-        // 'src/store/index.ts'
+        'src/components/*', 
       ],
     }
   },
@@ -40,8 +31,5 @@ export default defineConfig({
   },
   rules: [
     ['shadow', { 'box-shadow': 'var(--shadow)' }]
-  ]
-  // transformers: [
-  //   transformerDirectives(),
-  // ],
+  ] 
 })
