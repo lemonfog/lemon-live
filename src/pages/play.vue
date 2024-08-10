@@ -109,36 +109,7 @@ function renderDm() {
   }, 200)
 }
 
-const addDm = (nick: string, msg: string) => {
-  dmCount++
-  if (dmSetting.blockOpen && blockRegex.value.length && blockRegex.value.some(i => i.test(msg))) return
-  if (dmCount % (dmSetting.sideClean || 100) == 0) {
-    dm.value.innerHTML = ''
-    scrolltop = 0
-  }
-
-  if (dmSetting.canvasOpen) dmk.value?.add(msg)
-  if (!state.showInfo || !dmSetting.sideOpen) return
-  const n = document.createElement('div')
-  const { sideColorOpen, sideFontsize, sideGap, colors } = dmSetting
-  n.style.margin = `${sideGap}px 0`
-  n.style.fontSize = `${sideFontsize}px`
-  if (sideColorOpen) n.style.color = colors[Math.floor(Math.random() * colors.length)]
-
-  const nickEl = document.createElement('span')
-  nickEl.style.opacity = '0.5'
-  nickEl.appendChild(document.createTextNode(nick+"："))
-  const mshEl = document.createElement('span')
-  mshEl.appendChild(document.createTextNode(msg))
-  // n.innerHTML = `<span style="opacity:.5"> ${nick}：</span><span>${msg}</span>`
-  n.appendChild(nickEl)
-  n.appendChild(mshEl)
-  dmlist.push(n)
-  renderDm()
-  // dm.value.appendChild(n)
-  // if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
-}
-
+ 
 // const dmOb = new ResizeObserver(() => {
 //   if (dm.value.scrollHeight > dm.value.clientHeight) {
 //     showScrollBtn.value = true
@@ -160,38 +131,7 @@ const dmBottomBtn = () => {
   dm.value.scrollTop = dm.value.scrollHeight
   dm.value.addEventListener('scroll', dmScroll, { passive: false })
 }
-let wsTimer: number
-
-const wsStart = () => {
-  if (!room.value || ws || (!dmSetting.canvasOpen && !dmSetting.sideOpen)) return
-  let first = true
-  if (room.value.siteId == 'huya') {
-    const url = room.value?.ws
-    if (!url) return
-    ws = new WebSocket(url)
-    ws.onopen = () => {
-      clearInterval(wsTimer)
-      addDm('系统', '开始连接弹幕服务器')
-      // dmOb.observe(dm.value)
-      dm.value.addEventListener('scroll', dmScroll)
-      ws?.send(JSON.stringify({ command: "subscribeNotice", data: ["getMessageNotice"], reqId: Date.now().toString() }))
-      wsTimer = setInterval(() => {
-        ws!.send('ping')
-      }, 45000)
-    }
-    ws.onmessage = (e) => {
-      if (first) {
-        addDm('系统', '弹幕服务器连接成功')
-        return first = false
-      }
-      const { sendNick, content } = JSON.parse(e.data).data
-      addDm(sendNick, content)
-    }
-    ws.onerror = () => {
-      clearInterval(wsTimer)
-      addDm('系统', '弹幕服务器连接失败')
-    }
-  }
+ 
  
     ws.onmessage = (e) => {
       if (first) {
