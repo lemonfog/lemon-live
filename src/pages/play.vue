@@ -44,15 +44,13 @@ const state = reactive<State>({
 
 const route = useRoute()
 const player = ref() as Ref<HTMLElement>
-const video = ref() as Ref<HTMLVideoElement>
-const dm = ref() as Ref<HTMLElement>
+const video = ref() as Ref<HTMLVideoElement> 
 const room = shallowRef<LiveRoomItem>()
 const types = computed(() => room.value?.stream?.map(i => i.type.toUpperCase()) || [])
 const qns = computed(() => types.value.length > 0 ? room.value!.stream[state.type].list.map(i => i.name) : [])
 const lines = computed(() => qns.value.length > 0 ? room.value!.stream[state.type].list[state.qn].lines.map(i => i.name) : [])
 const type = computed(() => types.value[state.type]?.toLowerCase() as 'flv')
-const url = computed(() => lines.value.length > 0 ? room.value!.stream[state.type].list[state.qn].lines[state.line].url : '')
-const follows = computed(() => sites.map(site => Object.values(site.follows) as LiveRoomItem[]).flat().sort(i => i.status ? -1 : 0))
+const url = computed(() => lines.value.length > 0 ? room.value!.stream[state.type].list[state.qn].lines[state.line].url : '') 
 
 watch(url, () => {
   if (!url.value) return
@@ -87,116 +85,7 @@ watch(type, () => {
 })
 
  
-
-const dmlist = [] as HTMLDivElement[]
-
-let dmTimer: number | undefined
-function renderDm() {
-  if (dmTimer) return
-  dmTimer = setTimeout(() => {
-    let i = -1
-    // const len = dmlist.length
-    const len = dmlist.length > 5 ? 5 : dmlist.length
-    dm.value.style.display = 'none'
-    while (++i < len) {
-      dm.value.appendChild(dmlist[i])
-    }
-    dm.value.style.display = 'block'
-    // dmlist.length = 0
-    dmlist.splice(0, 5)
-    if (alwaysBottom) dm.value.scrollTop = dm.value.scrollHeight
-    dmTimer = undefined
-  }, 200)
-}
-
  
-// const dmOb = new ResizeObserver(() => {
-//   if (dm.value.scrollHeight > dm.value.clientHeight) {
-//     showScrollBtn.value = true
-//     dmOb.unobserve(dm.value)
-//     return
-//   }
-//   showScrollBtn.value = false
-// })
-let scrolltop = 0
-const dmScroll = () => {
-  if (dm.value.scrollTop >= scrolltop) return scrolltop = dm.value.scrollTop
-  scrolltop = dm.value.scrollTop
-  alwaysBottom = false
-  // dmOb.unobserve(dm.value)
-  dm.value.removeEventListener('scroll', dmScroll)
-}
-const dmBottomBtn = () => {
-  alwaysBottom = true
-  dm.value.scrollTop = dm.value.scrollHeight
-  dm.value.addEventListener('scroll', dmScroll, { passive: false })
-}
- 
- 
-    ws.onmessage = (e) => {
-      if (first) {
-        addDm('系统', '弹幕服务器连接成功')
-        first = false
-      }
-      const barrageDecode = decodePushFrame(new Uint8Array(e.data))
-      const decompressed = ungzip(barrageDecode.payload!)
-      const res = decodeResponse(new Uint8Array(decompressed))
-      const list = res.messagesList
-      if (!list || list.length == 0) return
-      const len = list.length
-      let i = -1
-      while (++i < len) {
-        if (list[i].method != 'WebcastChatMessage') continue
-        const res = decodeChatMessage(list[i].payload!)
-        addDm(res.user!.nickName!, res.content!)
-      }
-    }
-    ws.onerror = function(){
-      console.log(this)
-      clearInterval(wsTimer)
-      addDm('系统', '弹幕服务器连接失败')
-      addDm('系统', '请允许第三方cookie 连接抖音弹幕必须')
-    }
-  }
-
-}
-
-const textEncoder = new TextEncoder()
-function douyuEncode(msg: string) {
-  let data = textEncoder.encode(msg)
-  const len = 9 + data.byteLength
-  const header = [len, 0, 0, 0.1, len, 0, 0, 0, 177, 2, 0, 0]
-  data = textEncoder.encode(msg + '\0')
-  const result = new Uint8Array(12 + data.byteLength)
-  result.set(header)
-  result.set(data, 12)
-  return result.buffer
-}
-
-const wsClose = () => {
-  clearInterval(wsTimer)
-
-  if (!ws) return
-  ws.onmessage = null
-  siteID == 'douyu' ? ws.send(douyuEncode('type@=logout')) : ws.close()
-  ws = null
-  dmCount = 0
-  if (dm.value && fullPath == route.fullPath) {
-    addDm('系统', '弹幕服务器断开连接')
-  }
-  // dmOb.unobserve(dm.value)
-  // cvOb.unobserve(canvas.value)
-}
-watch(room, () => wsStart())
-// watchEffect(() => {
-//   if (!dmSetting.sideOpen && !dmSetting.canvasOpen) wsClose()
-//   if (!ws) wsStart()
-// })
-watch([() => dmSetting.sideOpen, () => dmSetting.canvasOpen], () => {
-  if (!dmSetting.sideOpen && !dmSetting.canvasOpen) wsClose()
-  if (!ws) wsStart()
-})
-
 
 const init = () => {
   const { site, id } = route.meta
@@ -204,26 +93,18 @@ const init = () => {
   if (_room) {
     room.value = _room
     state.follow = true
-  }
-  clearInterval(wsTimer)
+  } 
   clearTimeout(noticeTimer)
-  state.notice = '加载中...'
-  nextTick(() => {
-    addDm('系统', '开始获取直播间信息')
-  })
+  state.notice = '加载中...' 
   useSiteFetch(site.id, 'getRoomDetail', { id }).then((data) => {
     room.value = data
-    if (state.follow) addFollow(data)
-    nextTick(() => addDm('系统', '直播间信息获取成功'))
+    if (state.follow) addFollow(data) 
     if (!data.status) return state.notice = '未开播！'
     document.title=room.value!.title
 
   }, (msg) => {
-    state.notice = msg
-    nextTick(() => addDm('系统', '直播间信息获取失败'))
+    state.notice = msg 
   }).finally(() => clearTimeout(noticeTimer))
-
-
 }
 
 const follow = () => {
@@ -272,22 +153,7 @@ const playEvent = () => {
 const pauseEvent = () => {
   state.paused = true
   autoHide()
-}
-
-// const volumeUp = () => {
-//   clearTimeout(noticeTimer)
-//   setVolume(true)
-//   video.value.volume = volume.value / 100
-//   state.notice = `当前音量 ${volume.value}`
-//   noticeTimer = setTimeout(() => state.notice = null, 1000)
-// }
-// const volumeDown = () => {
-//   clearTimeout(noticeTimer)
-//   setVolume(false)
-//   video.value.volume = volume.value / 100
-//   state.notice = `当前音量 ${volume.value}`
-//   noticeTimer = setTimeout(() => state.notice = null, 1000)
-// }
+} 
 const hotkey = (e: KeyboardEvent) => {
   // if (!(player.value.focus) || !url.value) return
   if (!url.value) return
@@ -304,9 +170,7 @@ const hotkey = (e: KeyboardEvent) => {
 const remove = () => {
   clearTimeout(clickTimer)
   clearTimeout(autoHideTimer)
-  clearTimeout(noticeTimer)
-  clearTimeout(dmTimer)
-  wsClose()
+  clearTimeout(noticeTimer) 
   document.removeEventListener('keydown', hotkey)
   if (type.value && !state.pictureInPicture) {
     // const type = types.value[state.type].toLowerCase() as 'flv' | 'hls'
@@ -336,48 +200,9 @@ onMounted(() => {
     state[type.value]?.destroy()
   })
 
-})
-let siteID = route.meta.site.id
-onBeforeRouteUpdate((to) => {
-  const { siteid, id } = to.params as any
-  // const site = sites.find(i => i.id == siteId)
-  const index = sitesArr.findIndex(i => i == siteid)
-  if (index == -1) return { name: '404' }
-  to.meta.site = sites[index]
-  to.meta.id = id
-  if (type.value) {
-    state[type.value]?.destroy()
-    state[type.value] = undefined
-  }
-  state.type = 0
-  state.qn = 0
-  state.line = 0
-  state.follow = false
-  room.value = undefined
-  // danmakuClean()
-  // dmk.value?.destory()
-  // siteID = route.meta.site.id
-  // fullPath = route.fullPath
-  // init()
-  return true
-})
-watch(() => route.params, () => {
-  clearTimeout(dmTimer)
-  wsClose()
-  danmakuClean()
-  dmk.value?.destory()
-  siteID = route.meta.site.id
-  fullPath = route.fullPath
-  init()
-})
-
+})   
 onBeforeUnmount(remove)
-
-const refreshFollows = () => Promise.all(map(sites, useCheckFollows))
-
-const tabClick = async (index: number) => {
-  if (index == 1) await refreshFollows()
-}
+ 
 
 const videoClick = () => state.showController ? play() : autoHide()
 
@@ -387,28 +212,7 @@ const togglePictureInPicture = () => {
   state.pictureInPicture = !state.pictureInPicture
   document.pictureInPictureElement ? document.exitPictureInPicture() : video.value.requestPictureInPicture()
 }
-
-
-const toggleColor = (e: Event) => {
-  const color = (e.target as HTMLElement).dataset.color
-  if (!color) return
-  const index = dmSetting.colors.findIndex((i) => i == color)
-  if (index == -1) return dmSetting.colors.push(color)
-  if (dmSetting.colors.length == 1) return
-  dmSetting.colors.splice(index, 1)
-}
-
-
-watch(() => dmSetting.colors, () => dmk.value?.setColors(dmSetting.colors))
-watch(() => dmSetting.canvasSpeed, () => dmk.value?.setSpeed(dmSetting.canvasSpeed))
-watch(() => dmSetting.canvasOpacity, () => dmk.value?.setOpacity(dmSetting.canvasOpacity))
-watch(() => dmSetting.canvasColorOpen, () => dmk.value?.setColors(dmSetting.canvasColorOpen ? dmSetting.colors : ['#ffffff']))
-watchEffect(() => {
-  dmk.value?.setGap(dmSetting.canvasGap)
-  dmk.value?.setFont(dmSetting.canvasFontsize)
-  dmk.value?.setRows(dmSetting.canvasRows)
-  dmk.value?.resize()
-})
+ 
 
 watch(volume, () => {
   autoHide()
@@ -427,26 +231,7 @@ watch(brightness, () => {
   noticeTimer = setTimeout(() => state.notice = null, 2000)
 })
 
-let followTimer: number
-const followRoot = ref() as Ref<HTMLElement>
-const followClick = (e: any) => {
-  clearTimeout(followTimer)
-  followTimer = setTimeout(() => {
-    const id = getDataSet('id', e.target, followRoot.value)
-    if (!id) return
-    const site = getDataSet('site', e.target, followRoot.value)
-    router.push(`/${site}/play/${id}`)
-  }, 300)
-}
-
-const followDbClick = (e: any) => {
-  clearTimeout(followTimer)
-  const id = getDataSet('id', e.target, followRoot.value)
-  if (!id) return
-  const site = getDataSet('site', e.target, followRoot.value)
-  const url = `/${site}/play/${id}`
-  window.open(url, '_blank')?.location
-}
+ 
 const getDataSet = (key: string, el: HTMLElement, root: HTMLElement): any => {
   if (el == root) return null
   const value = el.dataset[key]
@@ -587,134 +372,6 @@ const volumeClick = () => {
 
 
       </div>
-    </div>
-
-    <div v-show="state.showInfo" grow min-h-50 lg:grow-0 lg:w-80 xl:w-100 flex flex-col lg:pr-0 pt-3 lg-pt-12 lg:ml-3
-      box-border lg:b-l-solid b lg:b-l-gray-7 lg:pl-3>
-      <div flex items-center line-height-none gap-4 b b-y-solid py-3 b-gray-7 px-4>
-        <img :src="room?.avatar" w-8 h-8 alt="" rounded-4>
-        <div grow-1 w-20>
-          <div h-4 truncate>{{ room?.nickname }}</div>
-          <div h-4 flex text-3 items-center gap-1>
-            <img w-4 h-4 :src="$route.meta.site.icon">
-            {{ $route.meta.site.name }}
-          </div>
-        </div>
-        <div>
-          <div mx-1 class="i-mdi-fire"></div>
-          <span>{{ room?.online }}</span>
-        </div>
-      </div>
-      <Tabs :grow="true" @tabClick="tabClick" class="!h-[calc(100%-3.75rem)]">
-        <Tab title="聊天" pos-relative>
-          <div pos-absolute top-0 right-4 text-4 flex flex-col gap-3>
-            <img w-1.5em cursor-pointer @click="() => dmSetting.sideOpen = !dmSetting.sideOpen"
-              :src="dmSetting.sideOpen ? danmakuIconOpen : danmakuIconClose" />
-            <div text-green-5 @click="danmakuClean" class="i-ri-delete-bin-3-line"></div>
-            <a text-green-5 :href="room?.url" target="_blank">
-              <div class="i-ri-link"></div>
-            </a>
-            <!-- <div v-show="showScrollBtn" @click="dmBottomBtn" text-green-5 class="i-ri-arrow-down-circle-line"> </div> -->
-            <div @click="dmBottomBtn" text-green-5 class="i-ri-arrow-down-circle-line"> </div>
-          </div>
-          <div ref="dm" h-full pl-2 box-border class="scrolly">
-          </div>
-        </Tab>
-        <Tab title="关注" box-border px-4>
-          <div @click.prevent="followClick" @dblclick.prevent="followDbClick">
-            <a v-for="i in follows" :data-id="i.roomId" :data-site="i.siteId"
-              :class="{ 'text-amber': room?.siteId == i.siteId && room?.roomId == i.roomId }"
-              :key="`${i.siteId}/${i.roomId}`" :href="`/${i.siteId}/play/${i.roomId}`" flex items-center gap-2 py-2>
-              <img w-5 h-5 rounded-5 v-lazy="i.avatar" alt="">
-              <div>{{ i.nickname }} </div>
-              <div w-3 h-3 rounded-3 :class="[i.status ? 'bg-green' : 'bg-red']"></div>
-              <div>{{ i.status ? '直播中' : '未开播' }}</div>
-            </a>
-          </div>
-
-        </Tab>
-        <Tab title="设置" px-2>
-          <!-- <div w-full p-2 box-border> -->
-          <div p-3 bg-sm>弹幕</div>
-          <div flex flex-col b b-solid b-gray-6 rounded-2 px-2>
-            <div flex justify-between items-center mx-2 py-2>
-              <div>文字大小</div>
-              <Stepper v-model:value="dmSetting.canvasFontsize" :max="80" :min="8" :step="1"></Stepper>
-            </div>
-            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-              <div>上下间隔</div>
-              <Stepper v-model:value="dmSetting.canvasGap" :max="80" :min="1" :step="1"></Stepper>
-            </div>
-            <div flex justify-between items-center mx-2 py-2>
-              <div>最大行数</div>
-              <Stepper v-model:value="dmSetting.canvasRows" :max="50" :min="1" :step="1"></Stepper>
-            </div>
-            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-              <div>弹幕速度</div>
-              <Stepper v-model:value="dmSetting.canvasSpeed" :max="32" :min="0.5" :step="0.5"></Stepper>
-            </div>
-            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-              <div>弹幕透明</div>
-              <Stepper v-model:value="dmSetting.canvasOpacity" :max="100" :min="10" :step="10"></Stepper>
-            </div>
-            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-              <div>彩色弹幕</div>
-              <Switch v-model:value="dmSetting.canvasColorOpen"></Switch>
-            </div>
-
-          </div>
-          <div p-3 bg-sm>聊天</div>
-          <div flex flex-col b b-solid b-gray-6 rounded-2 px-2>
-            <div flex justify-between items-center mx-2 py-2>
-              <div>文字大小</div>
-              <Stepper v-model:value="dmSetting.sideFontsize" :max="80" :min="8" :step="1"></Stepper>
-            </div>
-            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-              <div>上下间隔</div>
-              <Stepper v-model:value="dmSetting.sideGap" :max="80" :min="0" :step="1"></Stepper>
-            </div>
-            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-              <div>自动清屏</div>
-              <Stepper v-model:value="dmSetting.sideClean" :max="500" :min="10" :step="10"></Stepper>
-            </div>
-            <div flex justify-between items-center b b-t-gray-6 b-t-solid mx-2 py-2>
-              <div>彩色消息</div>
-              <Switch v-model:value="dmSetting.sideColorOpen"></Switch>
-            </div>
-          </div>
-
-          <div p-3 bg-sm>颜色</div>
-          <div flex flex-wrap shadow blur bg-dark p-2 box-border b b-solid b-gray-7
-            style="box-shadow:0 6px 15px 0 rgba(0, 0, 0, .5) ;" rounded>
-            <div v-for="color in colors" @click="toggleColor">
-              <div class="w-4 h-4 rounded-2 m-2 shadow" box-border :data-color="color" cursor-pointer
-                :style="`background:${color};${dmSetting.colors.includes(color) ? 'box-shadow:0 0 0px 2px white' : ''}`">
-              </div>
-            </div>
-          </div>
-          <div p-3 bg-sm flex justify-between items-center>屏蔽
-            <Switch v-model:value="dmSetting.blockOpen" />
-          </div>
-          <textarea outline-none w-full v-model.trim="dmSetting.blockWords" text-white b b-solid b-gray-7 p-2 box-border
-            rows="5" bg-dark shadow rounded-1 placeholder="以空格分隔"></textarea>
-          <!-- </div> -->
-        </Tab>
-      </Tabs>
-      <!-- <div grid grid-cols-3 text-center gap-2> -->
-      <!-- <div flex justify-around>
-        <div cursor-pointer hover:text-amber p-2 rounded-2 @click="follow">
-          <div :class="state.follow ? 'i-ri-heart-fill' : 'i-ri-heart-line'"></div>
-          <span ml-1>关注</span>
-        </div>
-        <div @click="init" cursor-pointer hover:text-amber p-2 rounded-2> 
-          <div class="i-ri-refresh-line"></div>
-          <span ml-1>刷新</span>
-        </div>
-        <div cursor-pointer hover:text-amber p-2 rounded-2>
-          <div class="i-ri-share-line"></div>
-          <span ml-1>分享</span>
-        </div>
-      </div> -->
-    </div>
+    </div> 
   </div>
 </template>
