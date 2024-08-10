@@ -17,22 +17,6 @@ const refresh = () => {
 }
 
 const refreshed = () => setTimeout(() => isRefresh.value = false, 300)
-// const fixFollow = () => {
-//   const follows = { huya: {}, douyu: {}, douyin: {}, bilibili: {}, cc: {} } as any
-//   const siteIds = Object.keys(follows)
-//   siteIds.forEach(i => {
-//     const str = localStorage.getItem('follows-' + i)
-//     if (!str) return
-//     const rooms = Object.values(JSON.parse(str)) as LiveRoomItem[]
-//     rooms.forEach(room => {
-//       follows[room.siteId][room.roomId] = room
-//     })
-//   })
-//   sites.forEach((site) => { 
-//     localStorage.setItem('follows-' + site.id, JSON.stringify(follows[site.id]))
-//   })
-//   location.reload()
-// } 
 const isRefresh = ref(false)
 
 const key = ref('')
@@ -126,15 +110,13 @@ const load: onLoad = (setStatus) => setStatus('finshed')
 
           <div @click.stop="show = false" class="i-ri-close-circle-line absolute right-2 top-2"></div>
         </div>
-      </div>
-      <!-- <button @click="fixFollow" outline-none rounded bg-amber b-amber cursor-pointer>修复关注</button> -->
+      </div> 
     </div>
 
   </div>
   <div class="h-[calc(100%-3rem)]">
     <Tabs v-model:active="active">
-      <tab v-for="site in follows" :title="site.name">
-        <!-- <Follows :list="site.list"></Follows> -->
+      <tab v-for="site in follows" :title="site.name"> 
         <List @load="load" :finshed-text="''">
           <Rooms :list="site.list"></Rooms>
         </List>

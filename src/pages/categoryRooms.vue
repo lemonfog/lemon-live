@@ -1,21 +1,6 @@
 <script setup lang="ts">
 import type { onLoad } from '../components/list/type';
 import { cookies, getSubCategory } from '../store';
-
-// definePage({
-//   path: '/category/:siteId/:id',
-//   //@ts-ignore
-//   beforeEnter: async (to) => {
-//     const sites = await (await import('../store')).sites
-//     const { siteId, id } = to.params
-//     const site = sites.find(i => i.id == siteId)
-//     if (site == undefined) return false
-//     to.meta.site = site
-//     // @ts-ignore
-//     to.meta.id = id   
-//     return true
-//   },
-// })
 const route = useRoute()
 const name = ref<string | null>('')
 const pid = ref<string>()

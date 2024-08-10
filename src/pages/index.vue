@@ -1,20 +1,9 @@
 <script setup lang="ts">
 import type { onLoad } from '../components/list/type';
 import { cookies, sites, active } from '../store'
-
-// const route = useRoute()
-const router = useRouter()
-
-// const active = ref((() => {
-//   if (!route.query.site) return 0
-//   const index = sites.findIndex(i => i.id == route.query.site)
-//   return index == -1 ? 0 : index
-// })())
-
-const siteId = computed(() => sites[active.value].id)
-
-// watch(siteId ,()=> router.push(`/?site=${siteId.value}`) )
-// onActivated(()=> router.replace(`/?site=${siteId.value}`) )
+ 
+const router = useRouter() 
+const siteId = computed(() => sites[active.value].id) 
 const load: onLoad = (setStatus) => {
   const recommend = sites[active.value].recommend
   useSiteFetch(siteId.value, 'getRecommendRooms', { page: recommend.page }).then(data => {
@@ -49,10 +38,7 @@ const tabClick = () => {
 
 <template>
   <Tabs v-model:active="active" @tab-click="tabClick" pt-1>
-    <Tab v-for="site in sites" :key="site.id" :title="site.name" pos-relative>
-      <!-- <div v-if="!site.recommend.list.value.length">
-        没有数据
-      </div> -->
+    <Tab v-for="site in sites" :key="site.id" :title="site.name" pos-relative> 
       <div v-show="isRefresh" text-6 rounded-6 bg-white shadow text-amber pos-absolute top-2 z-10
         style="left: 50%;transform: translateX(-50%)">
         <div class="i-ri-refresh-line animate-spin"></div>

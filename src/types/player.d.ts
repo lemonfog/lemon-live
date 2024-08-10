@@ -1,3 +1,0 @@
-// export {}
-
-// declare module 'dplayer'

@@ -23,17 +23,10 @@ const navs = [
     link: '/user'
   }
 ]
-
-// const hasDouyinCookie = ref(getItem('douyin-cookie', false))
+ 
 const showIframe = ref(true)
 onMounted(() => {
   document.querySelector('main')!.style.height = `calc(${window.innerHeight}px - 3.5rem)`
-  // if (!hasDouyinCookie.value) {
-  //   setTimeout(() => {
-  //     hasDouyinCookie.value = true
-  //     setItem('douyin-cookie', true)
-  //   }, 5000)
-  // }
   setTimeout(() => showIframe.value = false, 5000) 
 })
 
@@ -50,9 +43,7 @@ watch(route, () => {
 const showMenu = ref(true)
 </script>
 
-<template>
-  <iframe v-if="showIframe" src="https://live.douyin.com" pos-absolute width="0" height="0" op-0 b-0
-    style="z-index: -10;"></iframe>
+<template> 
 
   <a text-lg href="https://github.com/lemonfog/lemon-live" target="_blank" pos-absolute right-1 sm:right-2 md:right-6
     top-3 class="i-ri-github-fill" z-10></a> 
