@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import danmakuIconOpen from '../assets/icons/danmaku_open.png'
 import danmakuIconClose from '../assets/icons/danmaku_close.png'
-import { sites, addFollow, removeFollow, volume, setVolume, brightness, setBrightness, dmSetting, colors, blockRegex, setItem, sitesArr } from '../store'
+import { addFollow, removeFollow, volume, setVolume, brightness, setBrightness, dmSetting,setItem} from '../store'
 import { Flv, Hls } from 'lemon-mse';
 import { isMobile } from '../hooks/useMouseTouch' 
 
@@ -84,9 +84,6 @@ watch(type, () => {
   state.flv = undefined
 })
 
- 
- 
-
 const init = () => {
   const { site, id } = route.meta
   const _room = route.meta.site.follows[id]
@@ -154,8 +151,7 @@ const pauseEvent = () => {
   state.paused = true
   autoHide()
 } 
-const hotkey = (e: KeyboardEvent) => {
-  // if (!(player.value.focus) || !url.value) return
+const hotkey = (e: KeyboardEvent) => { 
   if (!url.value) return
   switch (e.code) {
     case 'ArrowDown':
@@ -172,8 +168,7 @@ const remove = () => {
   clearTimeout(autoHideTimer)
   clearTimeout(noticeTimer) 
   document.removeEventListener('keydown', hotkey)
-  if (type.value && !state.pictureInPicture) {
-    // const type = types.value[state.type].toLowerCase() as 'flv' | 'hls'
+  if (type.value && !state.pictureInPicture) { 
     state[type.value]?.destroy()
   }
 }
@@ -207,8 +202,7 @@ onBeforeUnmount(remove)
 const videoClick = () => state.showController ? play() : autoHide()
 
 
-const togglePictureInPicture = () => {
-  // if(!document.pictureInPictureEnabled) return
+const togglePictureInPicture = () => { 
   state.pictureInPicture = !state.pictureInPicture
   document.pictureInPictureElement ? document.exitPictureInPicture() : video.value.requestPictureInPicture()
 }
@@ -354,23 +348,7 @@ const volumeClick = () => {
             <div @click.stop="volumeClick" :class="state.muted ? 'i-ri-volume-mute-line' : 'i-ri-volume-down-line'">
             </div>
           </div>
-        </div>
-        <!-- <div v-else v-show="state.showController" h-0 w-0>
-          <div @click.stop="" @dblclick.stop=""  pos-absolute :class="state.fullscreen?'top-50%':'top-40%'" class="left-3 flex items-center flex-col gap-4 p-1" style="transform:translateY(-50%)"
-            z-20>
-            <div @click="setBrightness(true)" class="i-ri-sun-fill"></div>
-            <div>{{ brightness }}</div>
-            <div @click="setBrightness(false)" class="i-ri-sun-line"></div>
-          </div>
-          <div @click.stop="" @dblclick.stop=""  pos-absolute :class="state.fullscreen?'top-50% right-8%':'top-40% '" class="flex items-center flex-col gap-4 p-1" style="transform:translateY(-50%)"
-            z-20>
-            <div @click="setVolume(true)" class="i-ri-volume-up-fill"></div>
-            <div>{{ volume }}</div>
-            <div @click="setVolume(false)" class="i-ri-volume-down-fill"></div>
-          </div> >
-        </div> -->
-
-
+        </div> 
       </div>
     </div> 
   </div>
