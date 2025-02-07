@@ -1,6 +1,6 @@
 ## lemomlive
  
-[https://lemonlive.deno.dev](https://lemonlive.deno.dev)
+[https://lemonlive25.deno.dev](https://lemonlive25.deno.dev)
 
 [https://lemonlive.pages.dev](https://lemonlive.pages.dev)
 
